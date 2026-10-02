@@ -38,10 +38,10 @@
           <el-table-column label="名称" min-width="240">
             <template #default="{ row }">
               <el-icon class="ico">
-                <Folder v-if="row.fileType === 0" /><Document v-else />
+                <Folder v-if="row.fileType === 1" /><Document v-else />
               </el-icon>
               <a
-                v-if="row.fileType === 0"
+                v-if="row.fileType === 1"
                 class="link"
                 @click="openFolderRow(row)"
               >{{ row.fileName }}</a>
@@ -56,7 +56,7 @@
           <el-table-column prop="createTime" label="创建时间" width="170" />
           <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
-              <el-button v-if="row.fileType === 1" link class="cp-link" @click="download(row)">下载</el-button>
+              <el-button v-if="row.fileType !== 1" link class="cp-link" @click="download(row)">下载</el-button>
               <el-button link class="cp-link" @click="rename(row)">重命名</el-button>
               <el-button link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
             </template>
@@ -81,12 +81,17 @@
     </el-dialog>
 
     <!-- 上传文件 -->
-    <el-dialog v-model="uploadVisible" title="上传文件" width="460px">
+    <el-dialog v-model="uploadVisible" title="上传文件" width="480px">
       <el-upload drag :auto-upload="false" :limit="1" :on-change="onFileChange">
         <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
         <div class="el-upload__text">拖拽文件到此处，或 <em>点击选择</em></div>
       </el-upload>
       <el-form label-width="80px" class="up">
+        <el-form-item label="文件类型" required>
+          <el-select v-model="fileType" placeholder="选择文件类型" style="width: 100%">
+            <el-option v-for="t in FILE_TYPES" :key="t.id" :label="t.name" :value="t.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="备注">
           <el-input v-model="remark" placeholder="可选" />
         </el-form-item>
@@ -123,8 +128,39 @@ const folderName = ref('')
 const uploadVisible = ref(false)
 const remark = ref('')
 const pickedFile = ref(null)
+const fileType = ref(null)
 
 const query = reactive({ pageNum: 1, pageSize: 10 })
+
+// 文件类型字典 —— 对应后端 cp_document.doc_file_type 表（type_id / type_name）
+// 后端暂未提供查询该字典的接口，故在此固化；字典若有变动需同步此处。
+// 注意：doc_file.file_type = 1 表示「文件夹」，文件类型是 100 及以上。
+const FILE_TYPES = [
+  { id: 100, name: 'Word 文档' },
+  { id: 101, name: 'Excel 表格' },
+  { id: 102, name: 'PPT 演示' },
+  { id: 103, name: 'PDF' },
+  { id: 104, name: '图片' },
+  { id: 105, name: '压缩包' },
+  { id: 106, name: '文本' },
+  { id: 107, name: '其他' }
+]
+
+// 按扩展名自动推断类型，减少一次手动选择
+const EXT_TYPE_MAP = {
+  doc: 100, docx: 100,
+  xls: 101, xlsx: 101,
+  ppt: 102, pptx: 102,
+  pdf: 103,
+  png: 104, jpg: 104, jpeg: 104, gif: 104, bmp: 104,
+  zip: 105, rar: 105, '7z': 105, tar: 105, gz: 105,
+  txt: 106, md: 106, log: 106
+}
+
+function guessType(name) {
+  const ext = (name.split('.').pop() || '').toLowerCase()
+  return EXT_TYPE_MAP[ext] || 107
+}
 
 function sizeText(size) {
   if (!size) return '-'
@@ -175,7 +211,7 @@ async function submitFolder() {
   }
   saving.value = true
   try {
-    await createFolder({ fileName: folderName.value, parentId: parentId.value, fileType: 0, remark: '' })
+    await createFolder({ fileName: folderName.value, parentId: parentId.value, fileType: 1, remark: '' })
     ElMessage.success('已创建')
     folderVisible.value = false
     loadTree()
@@ -187,11 +223,17 @@ async function submitFolder() {
 
 function onFileChange(file) {
   pickedFile.value = file.raw
+  // 按扩展名自动推断类型
+  fileType.value = guessType(file.name || file.raw?.name || '')
 }
 
 async function submitUpload() {
   if (!pickedFile.value) {
     ElMessage.warning('请先选择文件')
+    return
+  }
+  if (!fileType.value) {
+    ElMessage.warning('请选择文件类型')
     return
   }
   saving.value = true
@@ -200,11 +242,13 @@ async function submitUpload() {
     fd.append('file', pickedFile.value)
     fd.append('fileName', pickedFile.value.name)
     fd.append('parentId', parentId.value)
+    fd.append('fileType', fileType.value)
     fd.append('remark', remark.value)
     await createFile(fd)
     ElMessage.success('上传成功')
     uploadVisible.value = false
     pickedFile.value = null
+    fileType.value = null
     remark.value = ''
     loadList()
   } finally {

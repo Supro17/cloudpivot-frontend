@@ -14,8 +14,8 @@
         <el-table-column prop="fileName" label="名称" min-width="240" show-overflow-tooltip />
         <el-table-column label="类型" width="100" align="center">
           <template #default="{ row }">
-            <el-tag class="cp-tag" :type="row.fileType === 0 ? 'warning' : 'info'" effect="light" size="small">
-              {{ row.fileType === 0 ? '文件夹' : '文件' }}
+            <el-tag class="cp-tag" :type="row.fileType === 1 ? 'warning' : 'info'" effect="light" size="small">
+              {{ row.fileType === 1 ? '文件夹' : '文件' }}
             </el-tag>
           </template>
         </el-table-column>

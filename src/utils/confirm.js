@@ -26,7 +26,14 @@ export async function confirmDelete(action, target = '该条数据', options = {
     return false // 用户点了取消
   }
 
-  await action()
+  try {
+    await action()
+  } catch (e) {
+    // 失败（如「该机构下存在部门，无法删除」）已由 request.js 统一弹过错误提示，
+    // 这里只负责吞掉异常，避免变成未捕获的 Promise rejection 打到控制台
+    return false
+  }
+
   ElMessage.success(successMsg)
   if (onSuccess) onSuccess()
   return true

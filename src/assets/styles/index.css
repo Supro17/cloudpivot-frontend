@@ -1,35 +1,41 @@
 /**
- * 全局样式 —— 参照 Apple 官网
+ * 全局样式 —— 参照泛微 e-cology OA 办公系统
  *
- * Apple 官网的设计语言要点（本项目照此实现）：
- *  - 超大留白：导航只有 48px、内容区上下留白极大、标题与副标题成对出现
- *  - 字体系统：SF Pro（-apple-system 优先），导航字号小而精致，正文大而轻
- *  - 极浅的层次：#f5f5f7 底、纯白卡片、18~22px 大圆角、几乎无边框
- *  - 蓝色是唯一强调色：#0071e3，hover 才出现
- *  - 不用重阴影、不用渐变、不用花哨装饰
+ * 泛微 OA 的界面特征（本项目照此实现）：
+ *  - 经典「顶栏 + 左侧二级菜单 + 内容区」三段式，不用大留白
+ *  - 主色是泛微亮蓝 #1E7FFF，页面底色浅灰 #F2F5F8，卡片小圆角（4px）、几乎无阴影
+ *  - 字号偏小（正文 13~14px），信息密度高 —— 与 Apple 官网的大留白完全相反
+ *  - 查询区表单横排、表格行高紧凑、表头浅灰
  */
 
 :root {
-  /* 色板 */
-  --cp-bg: #f5f5f7;
+  /* 泛微配色 */
+  --cp-primary: #1e7fff;
+  --cp-primary-dark: #1868e6;
+  --cp-primary-light: #ecf5ff;
+  --cp-bg: #f2f5f8;
   --cp-surface: #ffffff;
-  --cp-surface-2: #fbfbfd;
-  --cp-text: #1d1d1f;
-  --cp-text-2: #6e6e73;
-  --cp-text-3: #86868b;
-  --cp-primary: #0071e3;
-  --cp-primary-hover: #0077ed;
-  --cp-success: #34c759;
-  --cp-warning: #ff9f0a;
-  --cp-danger: #ff3b30;
-  --cp-hairline: rgba(0, 0, 0, 0.08);
-  --cp-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+  --cp-text: #303133; /* Element 默认主文字色，OA 里通用 */
+  --cp-text-2: #606266;
+  --cp-text-3: #909399;
+  --cp-border: #e4e7ed;
+  --cp-border-light: #ebeef5;
+  --cp-head-bg: #f5f7fa;
 
-  /* 尺寸 */
-  --cp-nav-h: 48px;
-  --cp-content-w: 1024px;
-  --cp-radius: 20px;
-  --cp-radius-sm: 12px;
+  /* 小圆角、无阴影 —— OA 风格 */
+  --cp-radius: 4px;
+  --cp-radius-sm: 2px;
+  --cp-topbar-h: 48px;
+  --cp-sidemenu-w: 208px;
+
+  /* 同时把 Element Plus 主色也切成泛微蓝，按钮/标签/分页全部跟随 */
+  --el-color-primary: #1e7fff;
+  --el-color-primary-light-3: #5aa3ff;
+  --el-color-primary-light-5: #8abfff;
+  --el-color-primary-light-7: #badbff;
+  --el-color-primary-light-8: #d2e9ff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #1868e6;
 }
 
 html,
@@ -41,171 +47,150 @@ body,
 body {
   background: var(--cp-bg);
   color: var(--cp-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
-    'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ============================ 页面骨架 ============================ */
-/* Apple 的大标题：字号大、字重高、紧跟一副标题 */
+/* ============================ 页面标题区 ============================ */
 .cp-hero {
-  padding: 40px 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 12px;
 }
 
 .cp-hero__title {
-  font-size: 44px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--cp-text);
   margin: 0;
 }
 
 .cp-hero__subtitle {
-  margin-top: 8px;
-  font-size: 17px;
-  font-weight: 400;
-  color: var(--cp-text-2);
-  letter-spacing: -0.01em;
+  font-size: 12px;
+  color: var(--cp-text-3);
+  margin: 2px 0 0;
 }
 
-.cp-hero__row {
+.cp-hero__actions {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 8px;
 }
 
 /* ============================ 卡片 ============================ */
 .cp-card {
   background: var(--cp-surface);
+  border: 1px solid var(--cp-border-light);
   border-radius: var(--cp-radius);
-  padding: 28px 32px;
-  box-shadow: var(--cp-shadow);
+  padding: 16px 18px;
 }
 
 .cp-card + .cp-card {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .cp-card__title {
-  font-size: 21px;
+  font-size: 14px;
   font-weight: 600;
-  letter-spacing: -0.015em;
-  margin: 0 0 4px;
+  margin: 0 0 10px;
+  padding-left: 8px;
+  border-left: 3px solid var(--cp-primary);
 }
 
 .cp-card__desc {
-  font-size: 13px;
-  color: var(--cp-text-2);
-  margin: 0 0 20px;
+  font-size: 12px;
+  color: var(--cp-text-3);
+  margin: 0 0 12px;
 }
 
-/* 筛选区：卡片内无内边距堆叠，用分隔线区隔 */
+/* 查询区：OA 里就是表单横排，不做大圆角 */
 .cp-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--cp-hairline);
+  gap: 10px;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--cp-border-light);
 }
 
-/* ============================ 按钮（胶囊） ============================ */
+/* ============================ 按钮（小圆角） ============================ */
 .cp-btn {
-  border-radius: 980px !important;
-  padding: 8px 20px !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.01em;
-  transition: background-color 0.2s ease, color 0.2s ease !important;
+  border-radius: var(--cp-radius-sm) !important;
+  padding: 7px 15px !important;
+  font-size: 13px !important;
 }
 
-/* ============================ 表格 ============================ */
+/* ============================ 表格（紧凑） ============================ */
 .cp-table {
-  --el-table-border-color: var(--cp-hairline);
-  --el-table-header-text-color: var(--cp-text-3);
+  --el-table-border-color: var(--cp-border-light);
+  --el-table-header-bg-color: var(--cp-head-bg);
+  --el-table-header-text-color: #606266;
   --el-table-text-color: var(--cp-text);
-  --el-table-header-font-size: 12px;
-  --el-table-row-hover-bg-color: transparent;
-}
-
-.cp-table::before {
-  display: none; /* 去掉表格底部那条多余的线 */
+  --el-table-row-hover-bg-color: #f5f7fa;
 }
 
 .cp-table th.el-table__cell {
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 .cp-table .el-table__cell {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--cp-hairline);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--cp-border-light);
 }
 
-.cp-table .el-table__row:last-child td.el-table__cell {
-  border-bottom: none;
-}
-
-/* 文字型操作链接：Apple 风格是纯蓝色文字、无下划线 */
+/* 操作列的文字按钮：OA 习惯用蓝色文字 */
 .cp-link {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--cp-primary);
-  font-weight: 400;
 }
 
 .cp-link--danger {
-  color: var(--cp-danger);
+  color: #f56c6c;
 }
 
 /* ============================ 标签 ============================ */
 .cp-tag {
-  border-radius: 980px;
-  font-weight: 500;
-  border: none;
+  border-radius: var(--cp-radius-sm);
+  font-weight: 400;
 }
 
-/* ============================ Element Plus 细节贴合 ============================ */
+/* ============================ Element Plus 细节 ============================ */
 .el-button {
-  border-radius: 980px;
-}
-
-.el-button--primary {
-  --el-button-bg-color: var(--cp-primary);
-  --el-button-border-color: var(--cp-primary);
-  --el-button-hover-bg-color: var(--cp-primary-hover);
-  --el-button-hover-border-color: var(--cp-primary-hover);
-  --el-button-active-bg-color: #006edb;
-  --el-button-active-border-color: #006edb;
+  border-radius: var(--cp-radius-sm);
 }
 
 .el-input__wrapper,
 .el-textarea__inner,
 .el-select__wrapper {
-  border-radius: 12px;
-  box-shadow: 0 0 0 1px var(--cp-hairline) inset;
+  border-radius: var(--cp-radius-sm);
+  box-shadow: 0 0 0 1px #dcdfe6 inset;
 }
 
 .el-input__wrapper.is-focus,
 .el-select__wrapper.is-focused {
-  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.55) inset;
+  box-shadow: 0 0 0 1px var(--cp-primary) inset;
 }
 
 .el-dialog {
   border-radius: var(--cp-radius);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.el-dialog__header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--cp-border-light);
+  margin: 0;
 }
 
 .el-drawer__header {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
+  font-size: 15px;
   font-weight: 600;
-  font-size: 20px;
-  letter-spacing: -0.015em;
 }
 
 .el-message-box {
@@ -214,4 +199,9 @@ body {
 
 .el-pagination {
   --el-pagination-font-size: 13px;
+}
+
+/* OA 常见：表格里的操作按钮间距收紧 */
+.el-table .cell .el-button + .el-button {
+  margin-left: 10px;
 }
