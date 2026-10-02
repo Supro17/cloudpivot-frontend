@@ -22,21 +22,36 @@ import { isHttp } from '@/utils/menu'
 // 一次性收集所有 view 的懒加载函数
 const viewModules = import.meta.glob('/src/views/**/*.vue')
 
+// 若依自带的、与本项目无关的菜单（官网/演示链接、代码生成等）
+function isRuoyiItem(menu) {
+  const title = (menu.meta?.title || '') + (menu.path || '')
+  return /若依|ruoyi\.vip/.test(title)
+}
+
 function loadView(component) {
   const key = `/src/views/${component}.vue`
   return viewModules[key] || Placeholder
 }
 
 // 把后端的菜单树转换成 vue-router 可用的路由配置
-// 返回 null 表示该节点不需要注册路由（外链）—— 它只留在菜单树里供导航渲染
-function buildRoute(menu) {
+// 返回 null 表示该节点不需要注册路由（外链 / 若依无关项）—— 它们只留在菜单树里
+function buildRoute(menu, parentKey = '') {
   // ★ 外链（如 Sentinel/Nacos 控制台、若依官网）不能进 vue-router：
   //   Route paths must start with "/"，addRoute 会直接抛异常
   //   菜单渲染时用 <a href target="_blank"> 新窗口打开
   if (isHttp(menu.path)) return null
+  // 若依自带的无关菜单也不注册
+  if (isRuoyiItem(menu)) return null
+
+  // 用「父路径 + 自身 path」作为唯一键
+  // ★ vue-router 以 name 为唯一键，重名会互相覆盖：
+  //   若依按 path 生成 name，而「部门管理」与「部门日程」的 name 都是 Depart、
+  //   「员工管理」与「用户管理」都是 User —— 后注册的会把先注册的顶掉，
+  //   实测导致 /org/depart 直接 404。加父路径前缀即可保证全局唯一。
+  const key = parentKey ? `${parentKey}/${menu.path}` : menu.path
 
   const route = {
-    name: menu.name,
+    name: key.replace(/^\//, '').replace(/\//g, '_') || 'root',
     path: menu.path,
     hidden: menu.hidden,
     redirect: menu.redirect,
@@ -51,10 +66,10 @@ function buildRoute(menu) {
     route.component = loadView(menu.component)
   }
 
-  // 子级里的外链同样剔除
+  // 子级里的外链与若依项同样剔除
   const children = (menu.children || [])
-    .filter((c) => !isHttp(c.path))
-    .map(buildRoute)
+    .filter((c) => !isHttp(c.path) && !isRuoyiItem(c))
+    .map((c) => buildRoute(c, key))
     .filter(Boolean)
   if (children.length) route.children = children
   return route
@@ -67,6 +82,10 @@ export const usePermissionStore = defineStore('permission', {
     // 是否已加载
     loaded: false
   }),
+  getters: {
+    // 实际展示的菜单：剔除若依自带的无关项
+    visibleMenus: (state) => state.sidebarRouters.filter((m) => !isRuoyiItem(m))
+  },
   actions: {
     async generateRoutes() {
       const res = await getRoutersApi()

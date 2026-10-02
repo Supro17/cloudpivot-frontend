@@ -1,59 +1,51 @@
 <template>
   <div class="app-shell">
-    <!-- 顶部导航：毛玻璃，Apple 官网风格 -->
+    <!-- 顶部导航：Apple 官网同款 —— 48px 细高、毛玻璃、12px 小字、hover 才变蓝 -->
     <header class="nav">
-      <div class="nav-inner">
+      <div class="nav__inner">
         <div class="brand" @click="router.push('/index')">{{ settings.title }}</div>
 
         <el-menu
-          class="nav-menu"
+          class="nav__menu"
           mode="horizontal"
           :default-active="activeMenu"
           :ellipsis="false"
           router
         >
           <MenuItem
-            v-for="item in permissionStore.sidebarRouters.filter((r) => !r.hidden)"
+            v-for="item in menus"
             :key="item.path"
             :item="item"
             base-path=""
           />
         </el-menu>
 
-        <!-- 消息未读角标：点击进信箱 -->
-        <el-tooltip content="我的信箱" placement="bottom">
-          <el-badge
-            :value="wsStore.unread"
-            :hidden="!wsStore.unread"
-            :max="99"
-            class="bell"
-          >
-            <el-button text :icon="Bell" @click="router.push('/message/inbox')" />
-          </el-badge>
-        </el-tooltip>
+        <div class="nav__right">
+          <el-tooltip content="我的信箱" placement="bottom">
+            <el-badge :value="wsStore.unread" :hidden="!wsStore.unread" :max="99" class="bell">
+              <el-button text :icon="Bell" @click="router.push('/message/inbox')" />
+            </el-badge>
+          </el-tooltip>
 
-        <el-dropdown @command="handleCommand">
-          <span class="user-chip">
-            <el-icon><User /></el-icon>
-            {{ userStore.name || '未登录' }}
-            <el-icon class="caret"><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="logout">
-                <el-icon><SwitchButton /></el-icon>退出登录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+          <el-dropdown @command="handleCommand">
+            <span class="user-chip">
+              <el-icon><User /></el-icon>
+              {{ userStore.name || '未登录' }}
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="logout">
+                  <el-icon><SwitchButton /></el-icon>退出登录
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
     </header>
 
-    <!-- 内容区 -->
     <main class="content">
-      <router-view v-slot="{ Component }">
-        <component :is="Component" />
-      </router-view>
+      <router-view />
     </main>
   </div>
 </template>
@@ -74,14 +66,13 @@ const userStore = useUserStore()
 const permissionStore = usePermissionStore()
 const wsStore = useWebsocketStore()
 
-// 高亮当前菜单：取路径前两段（/message/list → /message/list）
+const menus = computed(() => permissionStore.visibleMenus)
+
 const activeMenu = computed(() => {
-  const p = route.path
-  const seg = p.split('/').filter(Boolean)
-  return seg.length >= 2 ? '/' + seg.slice(0, 2).join('/') : p
+  const seg = route.path.split('/').filter(Boolean)
+  return seg.length >= 2 ? '/' + seg.slice(0, 2).join('/') : route.path
 })
 
-// 安全退出：清 Pinia 全部状态 + sessionStorage，再回登录页
 async function handleCommand(command) {
   if (command !== 'logout') return
   await userStore.logout()
@@ -94,60 +85,75 @@ async function handleCommand(command) {
   min-height: 100%;
 }
 
+/* ---------- 导航 ---------- */
 .nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.72);
+  height: var(--cp-nav-h);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--cp-border);
 }
 
-.nav-inner {
-  max-width: 1280px;
+.nav__inner {
+  max-width: var(--cp-content-w);
+  height: var(--cp-nav-h);
   margin: 0 auto;
-  height: var(--cp-nav-height);
+  padding: 0 22px;
   display: flex;
   align-items: center;
-  gap: 20px;
-  padding: 0 20px;
+  gap: 28px;
 }
 
 .brand {
   font-size: 17px;
   font-weight: 600;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.02em;
+  color: var(--cp-text);
   cursor: pointer;
-  color: var(--cp-text);
   flex-shrink: 0;
+  line-height: 1;
 }
 
-.nav-menu {
+.nav__menu {
   flex: 1;
-  border-bottom: none !important;
   background: transparent;
-}
-
-/* el-menu horizontal 去默认底色/下划线，贴合苹果风 */
-.nav-menu :deep(.el-menu-item),
-.nav-menu :deep(.el-sub-menu__title) {
   border-bottom: none !important;
-  height: var(--cp-nav-height);
-  line-height: var(--cp-nav-height);
-  color: var(--cp-text);
-  font-size: 14px;
-  padding: 0 14px;
+}
+
+.nav__menu :deep(.el-menu-item),
+.nav__menu :deep(.el-sub-menu__title) {
+  height: var(--cp-nav-h);
+  line-height: var(--cp-nav-h);
+  border-bottom: none !important;
   border-radius: 0;
+  background: transparent !important;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  padding: 0 12px;
 }
 
-.nav-menu :deep(.el-menu-item:hover),
-.nav-menu :deep(.el-sub-menu__title:hover) {
-  background: rgba(0, 0, 0, 0.04) !important;
-}
-
-.nav-menu :deep(.el-menu-item.is-active) {
+.nav__menu :deep(.el-menu-item:hover),
+.nav__menu :deep(.el-sub-menu__title:hover) {
   color: var(--cp-primary) !important;
+}
+
+.nav__menu :deep(.el-menu-item.is-active) {
+  color: var(--cp-primary) !important;
+}
+
+/* 去掉 el-menu 的下拉箭头与外层边框残留 */
+.nav__menu :deep(.el-sub-menu__icon-arrow) {
+  display: none;
+}
+
+.nav__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .bell {
@@ -159,21 +165,22 @@ async function handleCommand(command) {
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.8);
+  padding: 4px 8px;
+  border-radius: 980px;
   cursor: pointer;
-  font-size: 14px;
-  color: var(--cp-text);
-  padding: 6px 10px;
-  border-radius: 8px;
-  flex-shrink: 0;
 }
 
 .user-chip:hover {
+  color: var(--cp-primary);
   background: rgba(0, 0, 0, 0.04);
 }
 
+/* ---------- 内容区：大留白 + 居中窄栏 ---------- */
 .content {
-  max-width: 1280px;
+  max-width: var(--cp-content-w);
   margin: 0 auto;
-  padding: 28px 20px 40px;
+  padding: 0 22px 72px;
 }
 </style>

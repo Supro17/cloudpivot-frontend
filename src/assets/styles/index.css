@@ -1,87 +1,217 @@
 /**
- * 全局样式 —— Apple 官网风格
+ * 全局样式 —— 参照 Apple 官网
  *
- * 设计要点（参考 apple.com）：
- *  - 大量留白、浅灰背景 #f5f5f7、纯白卡片、18px 大圆角、极淡阴影
- *  - 主色用苹果蓝 #0071e3，文字 #1d1d1f / 次要 #6e6e73
- *  - 顶部导航固定 + 毛玻璃（backdrop-filter: blur）
- *  - 无花哨渐变与重阴影，hover 用轻微透明度变化
+ * Apple 官网的设计语言要点（本项目照此实现）：
+ *  - 超大留白：导航只有 48px、内容区上下留白极大、标题与副标题成对出现
+ *  - 字体系统：SF Pro（-apple-system 优先），导航字号小而精致，正文大而轻
+ *  - 极浅的层次：#f5f5f7 底、纯白卡片、18~22px 大圆角、几乎无边框
+ *  - 蓝色是唯一强调色：#0071e3，hover 才出现
+ *  - 不用重阴影、不用渐变、不用花哨装饰
  */
+
 :root {
+  /* 色板 */
   --cp-bg: #f5f5f7;
   --cp-surface: #ffffff;
+  --cp-surface-2: #fbfbfd;
   --cp-text: #1d1d1f;
-  --cp-text-secondary: #6e6e73;
+  --cp-text-2: #6e6e73;
+  --cp-text-3: #86868b;
   --cp-primary: #0071e3;
   --cp-primary-hover: #0077ed;
   --cp-success: #34c759;
   --cp-warning: #ff9f0a;
   --cp-danger: #ff3b30;
-  --cp-border: rgba(0, 0, 0, 0.08);
-  --cp-radius-lg: 18px;
-  --cp-radius-md: 12px;
-  --cp-nav-height: 52px;
+  --cp-hairline: rgba(0, 0, 0, 0.08);
+  --cp-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+
+  /* 尺寸 */
+  --cp-nav-h: 48px;
+  --cp-content-w: 1024px;
+  --cp-radius: 20px;
+  --cp-radius-sm: 12px;
+}
+
+html,
+body,
+#app {
+  height: 100%;
 }
 
 body {
   background: var(--cp-bg);
   color: var(--cp-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
-    'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue',
+    'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-size: 14px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---------- 卡片 ---------- */
+/* ============================ 页面骨架 ============================ */
+/* Apple 的大标题：字号大、字重高、紧跟一副标题 */
+.cp-hero {
+  padding: 40px 0 28px;
+}
+
+.cp-hero__title {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  margin: 0;
+}
+
+.cp-hero__subtitle {
+  margin-top: 8px;
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--cp-text-2);
+  letter-spacing: -0.01em;
+}
+
+.cp-hero__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* ============================ 卡片 ============================ */
 .cp-card {
   background: var(--cp-surface);
-  border-radius: var(--cp-radius-lg);
-  padding: 24px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: var(--cp-radius);
+  padding: 28px 32px;
+  box-shadow: var(--cp-shadow);
 }
 
-.cp-page-title {
-  font-size: 28px;
+.cp-card + .cp-card {
+  margin-top: 20px;
+}
+
+.cp-card__title {
+  font-size: 21px;
   font-weight: 600;
-  letter-spacing: -0.5px;
-  margin-bottom: 4px;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px;
 }
 
-.cp-page-desc {
-  color: var(--cp-text-secondary);
+.cp-card__desc {
   font-size: 13px;
-  margin-bottom: 20px;
+  color: var(--cp-text-2);
+  margin: 0 0 20px;
 }
 
-/* ---------- Element Plus 细节贴合苹果风 ---------- */
+/* 筛选区：卡片内无内边距堆叠，用分隔线区隔 */
+.cp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--cp-hairline);
+}
+
+/* ============================ 按钮（胶囊） ============================ */
+.cp-btn {
+  border-radius: 980px !important;
+  padding: 8px 20px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.01em;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+/* ============================ 表格 ============================ */
+.cp-table {
+  --el-table-border-color: var(--cp-hairline);
+  --el-table-header-text-color: var(--cp-text-3);
+  --el-table-text-color: var(--cp-text);
+  --el-table-header-font-size: 12px;
+  --el-table-row-hover-bg-color: transparent;
+}
+
+.cp-table::before {
+  display: none; /* 去掉表格底部那条多余的线 */
+}
+
+.cp-table th.el-table__cell {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cp-table .el-table__cell {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--cp-hairline);
+}
+
+.cp-table .el-table__row:last-child td.el-table__cell {
+  border-bottom: none;
+}
+
+/* 文字型操作链接：Apple 风格是纯蓝色文字、无下划线 */
+.cp-link {
+  font-size: 14px;
+  color: var(--cp-primary);
+  font-weight: 400;
+}
+
+.cp-link--danger {
+  color: var(--cp-danger);
+}
+
+/* ============================ 标签 ============================ */
+.cp-tag {
+  border-radius: 980px;
+  font-weight: 500;
+  border: none;
+}
+
+/* ============================ Element Plus 细节贴合 ============================ */
+.el-button {
+  border-radius: 980px;
+}
+
 .el-button--primary {
   --el-button-bg-color: var(--cp-primary);
   --el-button-border-color: var(--cp-primary);
   --el-button-hover-bg-color: var(--cp-primary-hover);
   --el-button-hover-border-color: var(--cp-primary-hover);
-  border-radius: 8px;
+  --el-button-active-bg-color: #006edb;
+  --el-button-active-border-color: #006edb;
 }
 
-.el-button {
-  border-radius: 8px;
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px var(--cp-hairline) inset;
 }
 
-.el-card {
-  border-radius: var(--cp-radius-lg);
-  border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-}
-
-.el-table {
-  --el-table-border-color: var(--cp-border);
-  --el-table-header-text-color: var(--cp-text-secondary);
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.55) inset;
 }
 
 .el-dialog {
-  border-radius: var(--cp-radius-lg);
+  border-radius: var(--cp-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
 }
 
-/* 表格行 hover 更轻 */
-.el-table tbody tr:hover > td {
-  background-color: #fafafa !important;
+.el-drawer__header {
+  margin-bottom: 16px;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.015em;
+}
+
+.el-message-box {
+  border-radius: var(--cp-radius);
+}
+
+.el-pagination {
+  --el-pagination-font-size: 13px;
 }

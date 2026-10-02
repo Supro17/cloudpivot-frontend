@@ -68,16 +68,20 @@ src/
 │   ├── confirm.js          删除二次确认
 │   ├── menu.js             菜单路径拼接/外链判断
 │   └── request.js          axios 封装（两种返回体、401 处理）
+├── components/
+│   ├── ParentView.vue      二级父容器
+│   ├── PageHeader.vue      Apple 式大标题（44px 标题 + 副标题 + 操作区）
+│   └── TablePager.vue      分页条（defineModel 双向绑定）
 ├── views/
-│   ├── login.vue           登录页（验证码已关闭）
-│   ├── index.vue           首页
+│   ├── login.vue           登录页
+│   ├── index.vue           工作台（业务域入口磁贴 + 会话状态）
 │   ├── error/404.vue
 │   ├── placeholder.vue     若依底座菜单的占位页
-│   └── message/            消息域
-│       ├── components/     MsgFormDialog（新建/编辑）、MsgDetailDrawer（详情）
-│       ├── list/index.vue  消息管理：查询/新建/编辑/详情/发布/删除
-│       ├── inbox/index.vue 我的信箱：查看并标记已读、未读数
-│       └── sent/index.vue  已发送
+│   ├── org/                组织管理：branch 机构 / depart 部门 / user 员工
+│   ├── calendar/           日程协作：mine 我的日程 / depart 部门日程 / note 便签
+│   ├── attendance/         考勤管理：sign 打卡 / history 历史 / statistics 统计 / worktime 工作时间
+│   ├── document/           文档知识：file 文档库 / recycle 回收站
+│   └── message/            消息沟通：list 管理 / inbox 信箱 / sent 已发送
 ├── main.js                 入口
 ├── permission.js           路由守卫（登录拦截 + 动态路由 + 接入长连接）
 └── settings.js             应用常量

@@ -1,0 +1,331 @@
+<template>
+  <div>
+    <PageHeader title="文档库" subtitle="目录树 + 文件列表，文件实际存放在 MinIO，库里只存对象名">
+      <template #actions>
+        <el-button class="cp-btn" :icon="FolderAdd" @click="openFolder">新建文件夹</el-button>
+        <el-button class="cp-btn" type="primary" :icon="Upload" @click="uploadVisible = true">上传文件</el-button>
+      </template>
+    </PageHeader>
+
+    <div class="cp-card doc">
+      <!-- 左：目录树 -->
+      <aside class="doc__tree">
+        <div class="doc__tree-head">
+          <span>目录</span>
+          <el-button link class="cp-link" @click="loadTree">刷新</el-button>
+        </div>
+        <el-tree
+          :data="tree"
+          :props="{ label: 'fileName', children: 'children' }"
+          node-key="fileId"
+          highlight-current
+          default-expand-all
+          @node-click="onNode"
+        />
+        <el-button link class="cp-link" @click="onNode({ fileId: 0 })">根目录</el-button>
+      </aside>
+
+      <!-- 右：文件列表 -->
+      <section class="doc__list">
+        <div class="doc__bar">
+          <el-input v-model="keyword" placeholder="搜索文件名" clearable style="width: 220px" @keyup.enter="doSearch" />
+          <el-button class="cp-btn" type="primary" @click="doSearch">搜索</el-button>
+          <el-button class="cp-btn" @click="loadList">重置</el-button>
+          <span class="doc__crumb">当前位置：{{ currentName }}</span>
+        </div>
+
+        <el-table v-loading="loading" class="cp-table" :data="rows">
+          <el-table-column label="名称" min-width="240">
+            <template #default="{ row }">
+              <el-icon class="ico">
+                <Folder v-if="row.fileType === 0" /><Document v-else />
+              </el-icon>
+              <a
+                v-if="row.fileType === 0"
+                class="link"
+                @click="openFolderRow(row)"
+              >{{ row.fileName }}</a>
+              <span v-else>{{ row.fileName }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="大小" width="110" align="right">
+            <template #default="{ row }">{{ sizeText(row.fileSize) }}</template>
+          </el-table-column>
+          <el-table-column prop="fileOwner" label="上传者" width="120" />
+          <el-table-column prop="remark" label="备注" width="160" show-overflow-tooltip />
+          <el-table-column prop="createTime" label="创建时间" width="170" />
+          <el-table-column label="操作" width="160" fixed="right">
+            <template #default="{ row }">
+              <el-button v-if="row.fileType === 1" link class="cp-link" @click="download(row)">下载</el-button>
+              <el-button link class="cp-link" @click="rename(row)">重命名</el-button>
+              <el-button link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <TablePager v-model:page="query.pageNum" v-model:size="query.pageSize" :total="total" @change="loadList" />
+      </section>
+    </div>
+
+    <!-- 新建文件夹 -->
+    <el-dialog v-model="folderVisible" title="新建文件夹" width="460px">
+      <el-form label-width="80px">
+        <el-form-item label="文件夹名">
+          <el-input v-model="folderName" placeholder="文件夹名称" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button class="cp-btn" @click="folderVisible = false">取消</el-button>
+        <el-button class="cp-btn" type="primary" :loading="saving" @click="submitFolder">创建</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 上传文件 -->
+    <el-dialog v-model="uploadVisible" title="上传文件" width="460px">
+      <el-upload drag :auto-upload="false" :limit="1" :on-change="onFileChange">
+        <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
+        <div class="el-upload__text">拖拽文件到此处，或 <em>点击选择</em></div>
+      </el-upload>
+      <el-form label-width="80px" class="up">
+        <el-form-item label="备注">
+          <el-input v-model="remark" placeholder="可选" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button class="cp-btn" @click="uploadVisible = false">取消</el-button>
+        <el-button class="cp-btn" type="primary" :loading="saving" @click="submitUpload">上传</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { FolderAdd, Upload, Folder, Document, UploadFilled } from '@element-plus/icons-vue'
+import { tree, list, createFolder, createFile, updateDoc, removeDoc, downloadUrl, search } from '@/api/document'
+import { getToken } from '@/utils/auth'
+import { confirmDelete } from '@/utils/confirm'
+import PageHeader from '@/components/PageHeader.vue'
+import TablePager from '@/components/TablePager.vue'
+
+const treeData = ref([])
+const rows = ref([])
+const total = ref(0)
+const loading = ref(false)
+const saving = ref(false)
+const parentId = ref(0)
+const currentName = ref('根目录')
+const keyword = ref('')
+
+const folderVisible = ref(false)
+const folderName = ref('')
+const uploadVisible = ref(false)
+const remark = ref('')
+const pickedFile = ref(null)
+
+const query = reactive({ pageNum: 1, pageSize: 10 })
+
+function sizeText(size) {
+  if (!size) return '-'
+  if (size < 1024) return `${size} B`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
+  return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
+async function loadTree() {
+  const res = await tree()
+  treeData.value = res.data || []
+}
+
+async function loadList() {
+  loading.value = true
+  try {
+    const res = await list({ parentId: parentId.value, pageNum: query.pageNum, pageSize: query.pageSize })
+    rows.value = res.rows || []
+    total.value = res.total || 0
+  } finally {
+    loading.value = false
+  }
+}
+
+function onNode(node) {
+  parentId.value = node.fileId || 0
+  currentName.value = node.fileName || '根目录'
+  query.pageNum = 1
+  loadList()
+}
+
+function openFolderRow(row) {
+  parentId.value = row.fileId
+  currentName.value = row.fileName
+  query.pageNum = 1
+  loadList()
+}
+
+function openFolder() {
+  folderName.value = ''
+  folderVisible.value = true
+}
+
+async function submitFolder() {
+  if (!folderName.value) {
+    ElMessage.warning('请输入文件夹名')
+    return
+  }
+  saving.value = true
+  try {
+    await createFolder({ fileName: folderName.value, parentId: parentId.value, fileType: 0, remark: '' })
+    ElMessage.success('已创建')
+    folderVisible.value = false
+    loadTree()
+    loadList()
+  } finally {
+    saving.value = false
+  }
+}
+
+function onFileChange(file) {
+  pickedFile.value = file.raw
+}
+
+async function submitUpload() {
+  if (!pickedFile.value) {
+    ElMessage.warning('请先选择文件')
+    return
+  }
+  saving.value = true
+  try {
+    const fd = new FormData()
+    fd.append('file', pickedFile.value)
+    fd.append('fileName', pickedFile.value.name)
+    fd.append('parentId', parentId.value)
+    fd.append('remark', remark.value)
+    await createFile(fd)
+    ElMessage.success('上传成功')
+    uploadVisible.value = false
+    pickedFile.value = null
+    remark.value = ''
+    loadList()
+  } finally {
+    saving.value = false
+  }
+}
+
+function rename(row) {
+  const name = window.prompt('新的名称', row.fileName)
+  if (!name || name === row.fileName) return
+  updateDoc({ fileId: row.fileId, fileName: name, parentId: row.parentId, fileType: row.fileType, remark: row.remark }).then(
+    () => {
+      ElMessage.success('已重命名')
+      loadTree()
+      loadList()
+    }
+  )
+}
+
+// 下载：download 接口需要带 token，所以用 fetch 取 blob 再触发保存
+function download(row) {
+  fetch(downloadUrl(row.fileId), {
+    headers: { Authorization: 'Bearer ' + getToken() }
+  })
+    .then((r) => r.blob())
+    .then((blob) => {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = row.fileName
+      a.click()
+      URL.revokeObjectURL(a.href)
+    })
+    .catch(() => ElMessage.error('下载失败'))
+}
+
+function handleRemove(row) {
+  confirmDelete(() => removeDoc(row.fileId), `「${row.fileName}」`, {
+    successMsg: '已移入回收站',
+    onSuccess: () => {
+      loadTree()
+      loadList()
+    }
+  })
+}
+
+function doSearch() {
+  if (!keyword.value) {
+    loadList()
+    return
+  }
+  // 搜索是 POST + body（关键词检索走全文匹配，与列表的 parentId 查询不同）
+  search({ keyword: keyword.value })
+    .then((res) => {
+      rows.value = res.rows || []
+      total.value = res.total || 0
+    })
+    .catch(() => {})
+}
+
+onMounted(() => {
+  loadTree()
+  loadList()
+})
+</script>
+
+<style scoped>
+.doc {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.doc__tree {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--cp-surface-2);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.doc__tree-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--cp-text-3);
+  margin-bottom: 8px;
+}
+
+.doc__list {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--cp-hairline);
+}
+
+.doc__crumb {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--cp-text-3);
+}
+
+.ico {
+  margin-right: 6px;
+  vertical-align: -2px;
+  color: var(--cp-primary);
+}
+
+.link {
+  color: var(--cp-primary);
+  cursor: pointer;
+}
+
+.up {
+  margin-top: 16px;
+}
+</style>
