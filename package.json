@@ -1,0 +1,23 @@
+{
+  "name": "cloudpivot-oa-frontend",
+  "version": "1.0.0",
+  "description": "云枢OA 企业协同办公平台前端（骨架，待审核后补充业务页面）",
+  "author": "苏伟凡",
+  "scripts": {
+    "dev": "vite",
+    "build:prod": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "2.3.2",
+    "axios": "1.13.2",
+    "element-plus": "2.13.1",
+    "pinia": "3.0.4",
+    "vue": "3.5.26",
+    "vue-router": "4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "5.2.4",
+    "vite": "6.4.1"
+  }
+}
