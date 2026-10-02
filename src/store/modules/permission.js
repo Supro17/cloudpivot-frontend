@@ -28,7 +28,13 @@ function loadView(component) {
 }
 
 // 把后端的菜单树转换成 vue-router 可用的路由配置
+// 返回 null 表示该节点不需要注册路由（外链）—— 它只留在菜单树里供导航渲染
 function buildRoute(menu) {
+  // ★ 外链（如 Sentinel/Nacos 控制台、若依官网）不能进 vue-router：
+  //   Route paths must start with "/"，addRoute 会直接抛异常
+  //   菜单渲染时用 <a href target="_blank"> 新窗口打开
+  if (isHttp(menu.path)) return null
+
   const route = {
     name: menu.name,
     path: menu.path,
@@ -37,10 +43,7 @@ function buildRoute(menu) {
     meta: menu.meta
   }
 
-  if (isHttp(menu.path)) {
-    // 外链：保留 path，不设 component
-    route.component = undefined
-  } else if (menu.component === 'Layout') {
+  if (menu.component === 'Layout') {
     route.component = Layout
   } else if (menu.component === 'ParentView') {
     route.component = ParentView
@@ -48,7 +51,11 @@ function buildRoute(menu) {
     route.component = loadView(menu.component)
   }
 
-  const children = (menu.children || []).map(buildRoute)
+  // 子级里的外链同样剔除
+  const children = (menu.children || [])
+    .filter((c) => !isHttp(c.path))
+    .map(buildRoute)
+    .filter(Boolean)
   if (children.length) route.children = children
   return route
 }
@@ -65,10 +72,12 @@ export const usePermissionStore = defineStore('permission', {
       const res = await getRoutersApi()
       const menus = res.data || []
 
+      // 菜单树原样保留（含外链），顶部导航渲染用
       this.sidebarRouters = menus
-      // 只注册顶级路由（children 随顶级一起注册）
+      // 只注册顶级路由（children 随顶级一起注册）；外链不注册
       menus.forEach((m) => {
         const route = buildRoute(m)
+        if (!route) return
         // 热更新或重复登录时可能已注册过，避免 addRoute 报重名
         if (route.name && !router.hasRoute(route.name)) {
           router.addRoute(route)

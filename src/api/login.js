@@ -17,11 +17,11 @@ export function login(data) {
   })
 }
 
-// 退出登录
+// 退出登录 —— 后端是 @DeleteMapping("logout")，严格 RESTful
 export function logout() {
   return request({
     url: '/auth/logout',
-    method: 'post'
+    method: 'delete'
   })
 }
 

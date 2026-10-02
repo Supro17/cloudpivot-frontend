@@ -36,6 +36,8 @@ router.beforeEach(async (to, from, next) => {
           useWebsocketStore().connect()
           next({ ...to, replace: true })
         } catch (err) {
+          // 必须留痕：否则「登录后闪回登录页」这种问题无从排查
+          console.error('[守卫] 初始化用户信息/动态路由失败：', err)
           await userStore.logout()
           next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
         }
