@@ -28,6 +28,24 @@ function isRuoyiItem(menu) {
   return /若依|ruoyi\.vip/.test(title)
 }
 
+// 演示环境不需要的菜单：
+//  - 系统工具：表单构建（若依的在线表单设计器）、代码生成（开发工具）
+//  - 系统监控：Sentinel / Nacos / Admin 三个运维控制台外链
+// 这些页面路由仍保留注册（可直接输 URL 访问），只是不出现在导航里
+const HIDE_MENU_KEYWORDS = ['表单构建', '代码生成', 'Sentinel', 'Nacos', 'Admin控制台']
+
+function isHiddenMenu(menu) {
+  const title = menu.meta?.title || ''
+  return HIDE_MENU_KEYWORDS.some((k) => title.includes(k))
+}
+
+/** 递归剔除「若依项」与「演示不需要项」，只影响导航显示，不影响路由注册 */
+function pruneMenus(menus) {
+  return menus
+    .filter((m) => !isRuoyiItem(m) && !isHiddenMenu(m))
+    .map((m) => ({ ...m, children: pruneMenus(m.children || []) }))
+}
+
 function loadView(component) {
   const key = `/src/views/${component}.vue`
   return viewModules[key] || Placeholder
@@ -83,8 +101,8 @@ export const usePermissionStore = defineStore('permission', {
     loaded: false
   }),
   getters: {
-    // 实际展示的菜单：剔除若依自带的无关项
-    visibleMenus: (state) => state.sidebarRouters.filter((m) => !isRuoyiItem(m))
+    // 导航实际展示的菜单：剔除若依自带的无关项（表单构建/代码生成/运维控制台等）
+    visibleMenus: (state) => pruneMenus(state.sidebarRouters)
   },
   actions: {
     async generateRoutes() {
