@@ -20,7 +20,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="fileOwner" label="原上传者" width="130" />
-        <el-table-column prop="updateTime" label="删除时间" width="180" />
+        <el-table-column prop="updateTime" label="删除时间" width="200" :formatter="fmt" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button link class="cp-link" @click="handleRestore(row)">还原</el-button>
@@ -41,6 +41,10 @@ import { recycleList, restoreDoc, purgeDoc } from '@/api/document'
 import { confirmDelete } from '@/utils/confirm'
 import PageHeader from '@/components/PageHeader.vue'
 import TablePager from '@/components/TablePager.vue'
+import { formatDateTimeCN } from '@/utils/date'
+
+// 表格时间列统一格式化（el-table 的 :formatter 签名是 (row, column, cellValue)）
+const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
 
 const loading = ref(false)
 const rows = ref([])

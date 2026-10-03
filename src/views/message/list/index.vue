@@ -40,9 +40,9 @@
         <el-table-column label="类型" width="90" align="center">
           <template #default="{ row }">{{ TYPE_TEXT[row.type] || '通知' }}</template>
         </el-table-column>
-        <el-table-column label="有效期" width="340">
+        <el-table-column label="有效期" width="400">
           <template #default="{ row }">
-            {{ row.beginTime }} ~ {{ row.endTime }}
+            {{ formatDateTimeCN(row.beginTime) }} ~ {{ formatDateTimeCN(row.endTime) }}
           </template>
         </el-table-column>
         <el-table-column label="发布状态" width="100" align="center">
@@ -52,7 +52,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="publishTime" label="发布时间" width="170" />
+        <el-table-column prop="publishTime" label="发布时间" width="200" :formatter="fmt" />
         <el-table-column label="操作" width="230" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDetail(row.messageId)">详情</el-button>
@@ -97,8 +97,12 @@ import { listMsg, delMsg, publishMsg, getMsg } from '@/api/message'
 import { confirmDelete } from '@/utils/confirm'
 import MsgFormDialog from '../components/MsgFormDialog.vue'
 import MsgDetailDrawer from '../components/MsgDetailDrawer.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const TYPE_TEXT = { 1: '通知', 2: '公告', 3: '提醒' }
+
+// 表格时间列统一格式化（el-table 的 :formatter 签名是 (row, column, cellValue)）
+const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
 
 const loading = ref(false)
 const rows = ref([])

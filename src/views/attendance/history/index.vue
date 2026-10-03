@@ -18,9 +18,9 @@
       </div>
 
       <el-table v-loading="loading" class="cp-table" :data="rows">
-        <el-table-column prop="signDate" label="日期" width="140" />
-        <el-table-column prop="signInTime" label="签到时间" width="200" />
-        <el-table-column prop="signOutTime" label="签退时间" width="200" />
+        <el-table-column prop="signDate" label="日期" width="190" :formatter="fmt" />
+        <el-table-column prop="signInTime" label="签到时间" width="200" :formatter="fmt" />
+        <el-table-column prop="signOutTime" label="签退时间" width="200" :formatter="fmt" />
         <el-table-column label="状态" width="140" align="center">
           <template #default="{ row }">
             <el-tag v-if="row.signInTime && row.signOutTime" class="cp-tag" type="success" effect="light">完整</el-tag>
@@ -40,6 +40,10 @@ import { onMounted, reactive, ref } from 'vue'
 import { history } from '@/api/attendance'
 import PageHeader from '@/components/PageHeader.vue'
 import TablePager from '@/components/TablePager.vue'
+import { formatDateTimeCN } from '@/utils/date'
+
+// 表格时间列统一格式化（el-table 的 :formatter 签名是 (row, column, cellValue)）
+const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
 
 const loading = ref(false)
 const rows = ref([])

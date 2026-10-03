@@ -24,7 +24,7 @@
         </el-table-column>
         <el-table-column prop="title" label="标题" min-width="240" show-overflow-tooltip />
         <el-table-column prop="fromUser" label="发送人" width="140" />
-        <el-table-column prop="publishTime" label="发布时间" width="180" />
+        <el-table-column prop="publishTime" label="发布时间" width="200" :formatter="fmt" />
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleView(row)">
@@ -56,8 +56,12 @@ import { Bell, Refresh } from '@element-plus/icons-vue'
 import { listInbox, markRead } from '@/api/message'
 import { useWebsocketStore } from '@/store/modules/websocket'
 import MsgDetailDrawer from '../components/MsgDetailDrawer.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const wsStore = useWebsocketStore()
+
+// 表格时间列统一格式化（el-table 的 :formatter 签名是 (row, column, cellValue)）
+const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
 
 const loading = ref(false)
 const rows = ref([])

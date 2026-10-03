@@ -8,8 +8,8 @@
             {{ detail.ifPublish === 1 ? '已发布' : '草稿' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="有效期开始">{{ detail.beginTime || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="有效期结束">{{ detail.endTime || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="有效期开始">{{ formatDateTimeCN(detail.beginTime) }}</el-descriptions-item>
+        <el-descriptions-item label="有效期结束">{{ formatDateTimeCN(detail.endTime) }}</el-descriptions-item>
         <el-descriptions-item label="发送范围" :span="2">{{ scopeText }}</el-descriptions-item>
       </el-descriptions>
 
@@ -22,6 +22,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { getMsg } from '@/api/message'
+import { formatDateTimeCN } from '@/utils/date'
 
 const visible = defineModel({ type: Boolean, default: false })
 const props = defineProps({ messageId: { type: [Number, String], default: null } })

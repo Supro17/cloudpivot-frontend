@@ -53,7 +53,7 @@
           </el-table-column>
           <el-table-column prop="fileOwner" label="上传者" width="120" />
           <el-table-column prop="remark" label="备注" width="160" show-overflow-tooltip />
-          <el-table-column prop="createTime" label="创建时间" width="170" />
+          <el-table-column prop="createTime" label="创建时间" width="200" :formatter="fmt" />
           <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
               <el-button v-if="row.fileType !== 1" link class="cp-link" @click="download(row)">下载</el-button>
@@ -126,10 +126,14 @@ import { getToken } from '@/utils/auth'
 import { confirmDelete } from '@/utils/confirm'
 import PageHeader from '@/components/PageHeader.vue'
 import TablePager from '@/components/TablePager.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const treeData = ref([])
 const rows = ref([])
 const total = ref(0)
+// 表格时间列统一格式化（el-table 的 :formatter 签名是 (row, column, cellValue)）
+const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
+
 const loading = ref(false)
 const saving = ref(false)
 const parentId = ref(0)

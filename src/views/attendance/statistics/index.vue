@@ -92,10 +92,16 @@ function reset() {
 
 // 出勤率文字放在进度条外面（text-inside 时小百分比会被压在色条里看不清）
 onMounted(async () => {
-  const res = await listDepart({ pageNum: 1, pageSize: 500 })
-  departOptions.value = res.rows || []
-    getList()
-  })
+  // 部门下拉只是「筛选项」：拿不到（例如普通员工没有 org:depart:list 权限）也不能
+  // 影响主列表加载 —— 否则 await 抛错会让后面的 getList() 永远执行不到，页面一片空白
+  try {
+    const res = await listDepart({ pageNum: 1, pageSize: 500 })
+    departOptions.value = res.rows || []
+  } catch (e) {
+    departOptions.value = []
+  }
+  getList()
+})
   </script>
 
 <style scoped>

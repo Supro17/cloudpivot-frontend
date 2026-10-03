@@ -22,7 +22,7 @@
             </el-dropdown>
           </div>
           <p class="note__body">{{ n.content }}</p>
-          <div class="note__foot">{{ (n.updateTime || n.createTime || '').slice(0, 16) }}</div>
+          <div class="note__foot">{{ formatDateTimeCN(n.updateTime || n.createTime) }}</div>
         </div>
 
         <el-empty v-if="!rows.length" description="还没有便签" class="empty" />
@@ -53,6 +53,7 @@ import { ElMessage } from 'element-plus'
 import { listNote, addNote, updateNote, removeNote } from '@/api/schedule'
 import { confirmDelete } from '@/utils/confirm'
 import PageHeader from '@/components/PageHeader.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const rows = ref([])
 const formVisible = ref(false)

@@ -35,7 +35,7 @@
           />
         </el-form-item>
         <el-form-item label="最近更新">
-          <span class="wt__scope">{{ form.updateTime || '-' }}</span>
+          <span class="wt__scope">{{ formatDateTimeCN(form.updateTime) }}</span>
         </el-form-item>
       </el-form>
 
@@ -52,6 +52,7 @@ import { ElMessage } from 'element-plus'
 import { getWorktime, updateWorktime } from '@/api/attendance'
 import { listBranch } from '@/api/org'
 import PageHeader from '@/components/PageHeader.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const branchId = ref(null)
 const branchOptions = ref([])
@@ -99,8 +100,13 @@ async function submit() {
 }
 
 onMounted(async () => {
-  const res = await listBranch({ pageNum: 1, pageSize: 500 })
-  branchOptions.value = res.rows || []
+  // 机构下拉是筛选项，拿不到也不该阻断主数据加载（同考勤统计页的处理）
+  try {
+    const res = await listBranch({ pageNum: 1, pageSize: 500 })
+    branchOptions.value = res.rows || []
+  } catch (e) {
+    branchOptions.value = []
+  }
   load()
 })
 </script>

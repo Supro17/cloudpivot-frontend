@@ -77,7 +77,7 @@
         <el-descriptions :column="1" border>
           <el-descriptions-item label="标题">{{ current.title }}</el-descriptions-item>
           <el-descriptions-item label="类型">{{ current.meetingName }}</el-descriptions-item>
-          <el-descriptions-item label="时间">{{ current.beginTime }} ~ {{ current.endTime }}</el-descriptions-item>
+          <el-descriptions-item label="时间">{{ formatDateTimeCN(current.beginTime) }} ~ {{ formatDateTimeCN(current.endTime) }}</el-descriptions-item>
           <el-descriptions-item label="地点">{{ current.address || '-' }}</el-descriptions-item>
           <el-descriptions-item label="备注">{{ current.schContent || '-' }}</el-descriptions-item>
         </el-descriptions>
@@ -102,6 +102,7 @@ import {
   getSchedule
 } from '@/api/schedule'
 import PageHeader from '@/components/PageHeader.vue'
+import { formatDateTimeCN } from '@/utils/date'
 
 const todayMonth = new Date().toISOString().slice(0, 7)
 const month = ref(todayMonth)
