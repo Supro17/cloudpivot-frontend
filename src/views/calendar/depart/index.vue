@@ -97,8 +97,14 @@ function thisWeek() {
 }
 
 onMounted(async () => {
-  const res = await listDepart({ pageNum: 1, pageSize: 500 })
-  departOptions.value = res.rows || []
+  // 部门下拉只是「筛选项」：拿不到（例如角色没有 org:depart:list）也不能影响主列表加载，
+  // 否则 await 抛错会让后面的 load() 永远执行不到，页面一片空白
+  try {
+    const res = await listDepart({ pageNum: 1, pageSize: 500 }, { silent: true })
+    departOptions.value = res.rows || []
+  } catch (e) {
+    departOptions.value = []
+  }
   load()
 })
 </script>

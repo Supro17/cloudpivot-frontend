@@ -46,7 +46,11 @@ service.interceptors.response.use(
       return Promise.reject(new Error(body.msg || '登录状态已过期'))
     }
     if (code !== 200) {
-      ElMessage({ message: body.msg || '系统异常', type: 'error', duration: 3000 })
+      // 静默请求：调用方已用 silent 声明「这是可选的附属请求」（如按权限才展示的下拉选项），
+      // 失败只 reject、不弹全局提示。否则普通用户会莫名其妙看到「没有访问权限」。
+      if (!isSilent(res.config)) {
+        ElMessage({ message: body.msg || '系统异常', type: 'error', duration: 3000 })
+      }
       return Promise.reject(new Error(body.msg || 'Error'))
     }
     return body
@@ -59,6 +63,9 @@ service.interceptors.response.use(
       handleRelogin()
       return Promise.reject(error)
     }
+    if (isSilent(error.config)) {
+      return Promise.reject(error)
+    }
     let message = error.message
     if (message === 'Network Error') {
       message = '网络异常，请检查后端服务与网关是否启动'
@@ -69,6 +76,14 @@ service.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+/**
+ * 是否为「静默请求」
+ * 调用方传 silent: true 时，失败不弹全局 ElMessage（仍会 reject，由调用方自行决定降级）
+ */
+function isSilent(config) {
+  return !!(config && config.silent === true)
+}
 
 /** 登录过期：清 token 并跳转登录页 */
 function handleRelogin() {

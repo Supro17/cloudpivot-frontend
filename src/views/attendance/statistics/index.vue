@@ -136,7 +136,7 @@ onMounted(async () => {
   // 部门下拉只是「筛选项」：拿不到（例如普通员工没有 org:depart:list 权限）也不能
   // 影响主列表加载 —— 否则 await 抛错会让后面的 getList() 永远执行不到，页面一片空白
   try {
-    const res = await listDepart({ pageNum: 1, pageSize: 500 })
+    const res = await listDepart({ pageNum: 1, pageSize: 500 }, { silent: true })
     departOptions.value = res.rows || []
   } catch (e) {
     departOptions.value = []

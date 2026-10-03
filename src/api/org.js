@@ -7,9 +7,9 @@ import request from '@/utils/request'
 
 // ============================ 机构 ============================
 
-/** GET /org/branch/list */
-export function listBranch(query) {
-  return request({ url: '/org/branch/list', method: 'get', params: query })
+/** GET /org/branch/list —— 作为「筛选器选项」使用时传 config={silent:true}，避免无权限时弹全局提示 */
+export function listBranch(query, config = {}) {
+  return request({ url: '/org/branch/list', method: 'get', params: query, ...config })
 }
 
 /** POST /org/branch/add */
@@ -29,9 +29,9 @@ export function removeBranch(branchId) {
 
 // ============================ 部门 ============================
 
-/** GET /org/depart/list */
-export function listDepart(query) {
-  return request({ url: '/org/depart/list', method: 'get', params: query })
+/** GET /org/depart/list —— 同上，作为筛选器选项时传 {silent:true} */
+export function listDepart(query, config = {}) {
+  return request({ url: '/org/depart/list', method: 'get', params: query, ...config })
 }
 
 /** POST /org/depart/add */
@@ -51,9 +51,9 @@ export function removeDepart(deptId) {
 
 // ============================ 员工 ============================
 
-/** GET /org/user/list */
-export function listUser(query) {
-  return request({ url: '/org/user/list', method: 'get', params: query })
+/** GET /org/user/list —— 同上，作为筛选器选项时传 {silent:true} */
+export function listUser(query, config = {}) {
+  return request({ url: '/org/user/list', method: 'get', params: query, ...config })
 }
 
 /** GET /org/user/{userId} */
