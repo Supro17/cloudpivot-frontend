@@ -119,12 +119,12 @@ async function doSign(type) {
 }
 
 async function loadStat() {
+  const f = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const now = new Date()
-  const begin = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  // ★ 统计区间截止到今天：未到月底按当天算，而不是按整月（否则出勤率会被"未来未到的日子"拉低）
   const res = await statistics({
-    beginDate: begin,
-    endDate: `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`
+    beginDate: f(new Date(now.getFullYear(), now.getMonth(), 1)),
+    endDate: f(now)
   })
   statRows.value = res.data || []
 }
