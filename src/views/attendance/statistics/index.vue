@@ -2,6 +2,27 @@
   <div>
     <PageHeader title="考勤统计" subtitle="按区间统计出勤率，工作日由后端按「非周末」规则计算" />
 
+    <div class="cp-card" style="margin-bottom: 12px">
+      <div class="cp-card__title">各部门本月整体出勤率（截止今日）</div>
+      <el-table :data="deptSummary" size="small">
+        <el-table-column prop="dept" label="部门" min-width="150" />
+        <el-table-column prop="people" label="出勤人数" width="100" align="center" />
+        <el-table-column label="整体出勤率" min-width="240">
+          <template #default="{ row }">
+            <div class="rate">
+              <el-progress
+                :percentage="clampPercent(row.rate)"
+                :stroke-width="10"
+                :show-text="false"
+                :color="rateColor(row.rate)"
+              />
+              <span class="rate__text">{{ row.rate }}%</span>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+
     <div class="cp-card">
       <div class="cp-toolbar">
         <el-date-picker
@@ -62,6 +83,26 @@ function defaultRange() {
   const f = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   return [f(start), f(end)]
 }
+
+// 部门汇总：把按人的统计行按部门聚合出「各部门整体出勤率」
+// 管理员看到全部分支机构；部门主管因数据权限只有本部门的人，汇总即本部门整体；普通员工只有自己
+const deptSummary = computed(() => {
+  const wd = Number(rows.value[0]?.workDays) || 0
+  const map = {}
+  for (const r of rows.value) {
+    const k = r.deptName || '未分配部门'
+    map[k] = map[k] || { dept: k, people: 0, actual: 0 }
+    map[k].people += 1
+    map[k].actual += Number(r.actualDays || 0)
+  }
+  return Object.values(map)
+    .map(x => ({
+      dept: x.dept,
+      people: x.people,
+      rate: x.people && wd ? (x.actual / (x.people * wd) * 100).toFixed(2) : '0.00'
+    }))
+    .sort((a, b) => Number(b.rate) - Number(a.rate))
+})
 
 function rateColor(rate) {
   const v = Number(rate)

@@ -105,7 +105,13 @@ async function doSign(type) {
   loading.value = type
   try {
     const res = type === 'in' ? await signIn() : await signOut()
-    ElMessage.success(res.msg || (type === 'in' ? '签到成功' : '签退成功'))
+    const d = res.data || {}
+    if (type === 'in' && d.late) {
+      // 后端按全局工作时间（att_work_time）判定迟到
+      ElMessage.warning('签到成功，迟到 ' + (d.lateMinutes || 0) + ' 分钟')
+    } else {
+      ElMessage.success(type === 'in' ? '签到成功' : '签退成功')
+    }
     getToday()
   } finally {
     loading.value = ''
