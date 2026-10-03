@@ -21,25 +21,26 @@
       </el-tooltip>
 
       <el-dropdown @command="handleCommand" trigger="click">
-        <el-tooltip
-          :content="userStore.orgText || '未设置部门'"
-          placement="bottom"
-          :disabled="!userStore.orgText"
-        >
-          <span class="user-chip">
-            <!-- 有头像显示图片，没有则显示姓名首字（el-avatar 的插槽即回落内容） -->
-            <el-avatar :size="32" :src="userStore.avatar || undefined" class="user-chip__avatar">
-              {{ userStore.displayName.slice(0, 1) }}
-            </el-avatar>
-            <span class="user-chip__info">
-              <span class="user-chip__name">{{ userStore.displayName }}</span>
-              <span v-if="userStore.jobTitle || userStore.deptName" class="user-chip__meta">
-                {{ userStore.jobTitle }}<template v-if="userStore.jobTitle && userStore.deptName"> · </template>{{ userStore.deptName }}
-              </span>
+        <!--
+          ★ 这里不能用 el-tooltip 包住触发元素：
+            el-dropdown 要求默认插槽是「单个元素」并在它上面绑定触发事件，
+            外面再套一层 el-tooltip 会让两者的 hover/click 交互冲突，
+            表现为「点右上角下拉打不开、菜单项全是隐藏状态」。
+            悬浮提示改用原生 title 属性（个人资料弹窗里有完整的机构信息）。
+        -->
+        <span class="user-chip" :title="userStore.orgText || '未设置部门'">
+          <!-- 有头像显示图片，没有则显示姓名首字（el-avatar 的插槽即回落内容） -->
+          <el-avatar :size="32" :src="userStore.avatar || undefined" class="user-chip__avatar">
+            {{ userStore.displayName.slice(0, 1) }}
+          </el-avatar>
+          <span class="user-chip__info">
+            <span class="user-chip__name">{{ userStore.displayName }}</span>
+            <span v-if="userStore.jobTitle || userStore.deptName" class="user-chip__meta">
+              {{ userStore.jobTitle }}<template v-if="userStore.jobTitle && userStore.deptName"> · </template>{{ userStore.deptName }}
             </span>
-            <el-icon class="user-chip__caret"><ArrowDown /></el-icon>
           </span>
-        </el-tooltip>
+          <el-icon class="user-chip__caret"><ArrowDown /></el-icon>
+        </span>
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item command="profile">
