@@ -80,6 +80,19 @@
       </template>
     </el-dialog>
 
+    <!-- 重命名 -->
+    <el-dialog v-model="renameVisible" title="重命名" width="460px">
+      <el-form label-width="80px">
+        <el-form-item label="新名称">
+          <el-input v-model="renameName" placeholder="新的文件/文件夹名称" @keyup.enter="submitRename" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button class="cp-btn" @click="renameVisible = false">取消</el-button>
+        <el-button class="cp-btn" type="primary" :loading="saving" @click="submitRename">确定</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 上传文件 -->
     <el-dialog v-model="uploadVisible" title="上传文件" width="480px">
       <el-upload drag :auto-upload="false" :limit="1" :on-change="onFileChange">
@@ -129,6 +142,9 @@ const uploadVisible = ref(false)
 const remark = ref('')
 const pickedFile = ref(null)
 const fileType = ref(null)
+const renameVisible = ref(false)
+const renameName = ref('')
+const renameRow = ref({})
 
 const query = reactive({ pageNum: 1, pageSize: 10 })
 
@@ -256,16 +272,40 @@ async function submitUpload() {
   }
 }
 
+// 重命名：用 el-dialog 而不是原生 prompt()
+// （原生 prompt 会阻塞页面渲染，风格也与其它页面不一致）
 function rename(row) {
-  const name = window.prompt('新的名称', row.fileName)
-  if (!name || name === row.fileName) return
-  updateDoc({ fileId: row.fileId, fileName: name, parentId: row.parentId, fileType: row.fileType, remark: row.remark }).then(
-    () => {
-      ElMessage.success('已重命名')
-      loadTree()
-      loadList()
-    }
-  )
+  renameRow.value = row
+  renameName.value = row.fileName
+  renameVisible.value = true
+}
+
+async function submitRename() {
+  const name = (renameName.value || '').trim()
+  if (!name) {
+    ElMessage.warning('请输入新名称')
+    return
+  }
+  if (name === renameRow.value.fileName) {
+    renameVisible.value = false
+    return
+  }
+  saving.value = true
+  try {
+    await updateDoc({
+      fileId: renameRow.value.fileId,
+      fileName: name,
+      parentId: renameRow.value.parentId,
+      fileType: renameRow.value.fileType,
+      remark: renameRow.value.remark
+    })
+    ElMessage.success('已重命名')
+    renameVisible.value = false
+    loadTree()
+    loadList()
+  } finally {
+    saving.value = false
+  }
 }
 
 // 下载：download 接口需要带 token，所以用 fetch 取 blob 再触发保存
@@ -296,11 +336,12 @@ function handleRemove(row) {
 
 function doSearch() {
   if (!keyword.value) {
+    // 关键词清空 → 回到当前目录的列表查询
     loadList()
     return
   }
-  // 搜索是 POST + body（关键词检索走全文匹配，与列表的 parentId 查询不同）
-  search({ keyword: keyword.value })
+  // 搜索接口是 POST + body，字段名必须是 fileName（后端 DocSearchQuery 的字段名）
+  search({ fileName: keyword.value })
     .then((res) => {
       rows.value = res.rows || []
       total.value = res.total || 0

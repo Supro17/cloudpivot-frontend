@@ -30,9 +30,13 @@ export function createFile(formData) {
   return request({ url: '/document/file', method: 'post', data: formData })
 }
 
-/** PUT /document/update —— body: { fileId, fileName, parentId, fileType, remark } */
+/**
+ * PUT /document —— 注意：后端 Controller 是 @PutMapping（**不带子路径**），
+ * 加上类级 @RequestMapping("/document") 后完整路径就是 PUT /document，
+ * 不是 /document/update（写成后者会 405 Request method 'PUT' is not supported）
+ */
 export function updateDoc(data) {
-  return request({ url: '/document/update', method: 'put', data })
+  return request({ url: '/document', method: 'put', data })
 }
 
 /** DELETE /document/{id} —— 逻辑删（进回收站） */
@@ -55,7 +59,12 @@ export function purgeDoc(id) {
   return request({ url: `/document/recycle/${id}`, method: 'delete' })
 }
 
-/** POST /document/search —— body: { keyword, ... } */
+/**
+ * POST /document/search —— body: DocSearchQuery
+ * ★ 字段名是 fileName（不是 keyword！）——后端 DocSearchQuery 只有
+ *   fileName / fileType / beginTime / endTime 四个字段，
+ *   传 keyword 会被静默忽略，导致「搜索返回全部结果」。
+ */
 export function search(data) {
   return request({ url: '/document/search', method: 'post', data })
 }

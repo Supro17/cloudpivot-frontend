@@ -93,7 +93,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listMsg, delMsg, publishMsg } from '@/api/message'
+import { listMsg, delMsg, publishMsg, getMsg } from '@/api/message'
 import { confirmDelete } from '@/utils/confirm'
 import MsgFormDialog from '../components/MsgFormDialog.vue'
 import MsgDetailDrawer from '../components/MsgDetailDrawer.vue'
@@ -138,9 +138,20 @@ function resetQuery() {
   handleQuery()
 }
 
-function openForm(row) {
-  // 编辑需要整行（含 scopeValue 回显），从列表行取；新建传 null
-  editingRow.value = row
+/**
+ * 打开表单
+ * ★ 编辑时必须先取详情：列表行是 MsgListVo，只有
+ *   {messageId, title, type, beginTime, endTime, ifPublish, publishTime}，
+ *   **不含 content / sendScope / scopeValue** —— 直接用它回显会把正文清空，
+ *   提交时后端报「内容不能为空」，编辑永远失败。
+ */
+async function openForm(row) {
+  if (row?.messageId) {
+    const res = await getMsg(row.messageId)
+    editingRow.value = res.data
+  } else {
+    editingRow.value = null
+  }
   formVisible.value = true
 }
 
