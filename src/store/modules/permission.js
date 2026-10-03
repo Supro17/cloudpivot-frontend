@@ -28,11 +28,22 @@ function isRuoyiItem(menu) {
   return /若依|ruoyi\.vip/.test(title)
 }
 
-// 演示环境不需要的菜单：
-//  - 系统工具：表单构建（若依的在线表单设计器）、代码生成（开发工具）
-//  - 系统监控：Sentinel / Nacos / Admin 三个运维控制台外链
-// 这些页面路由仍保留注册（可直接输 URL 访问），只是不出现在导航里
-const HIDE_MENU_KEYWORDS = ['表单构建', '代码生成', 'Sentinel', 'Nacos', 'Admin控制台']
+// 导航里不展示的菜单：
+//  - 系统管理 / 系统监控：对应页面是若依底座的功能（用户/角色/菜单/在线用户/定时任务等），
+//    本项目前端未实现，点进去只有占位页 —— 演示时不需要，直接隐藏
+//  - 系统工具：表单构建（在线表单设计器）、代码生成（开发工具）与本项目无关
+//  - Sentinel / Nacos / Admin 控制台：运维用外链
+// 这些路由也不再注册（直接输 URL 会落到 404，而 404 页保留导航栏，能点回来）；
+// 想恢复只需从下面这个数组里删掉对应关键词。
+const HIDE_MENU_KEYWORDS = [
+  '系统管理',
+  '系统监控',
+  '表单构建',
+  '代码生成',
+  'Sentinel',
+  'Nacos',
+  'Admin控制台'
+]
 
 function isHiddenMenu(menu) {
   const title = menu.meta?.title || ''
