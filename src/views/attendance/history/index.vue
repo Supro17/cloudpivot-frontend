@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader title="考勤历史" subtitle="按日期区间查询自己的签到签退记录" />
+    <PageHeader title="考勤历史" subtitle="按日期区间查询考勤记录，可见范围由你的角色数据权限决定" />
 
     <div class="cp-card">
       <div class="cp-toolbar">
@@ -18,6 +18,10 @@
       </div>
 
       <el-table v-loading="loading" class="cp-table" :data="rows">
+        <!-- ★ 必须有「账号」列：本页是查询页，数据权限放开的人（管理员/人事/主管）
+             会看到同一天多条记录，那是【不同的人】，不是重复数据。
+             后端已按 (user_name, sign_date) 分组，一天一人一行。 -->
+        <el-table-column prop="userName" label="账号" width="130" />
         <el-table-column prop="signDate" label="日期" width="190" :formatter="fmt" />
         <el-table-column prop="signInTime" label="签到时间" width="200" :formatter="fmt" />
         <el-table-column prop="signOutTime" label="签退时间" width="200" :formatter="fmt" />
