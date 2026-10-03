@@ -25,13 +25,17 @@ export const constantRoutes = [
         name: 'Index',
         component: () => import('@/views/index.vue'),
         meta: { title: '首页', icon: 'Odometer' }
+      },
+      // 404 必须放在布局内：这样走错路径时顶部/左侧导航还在，用户能点回去。
+      // 放在布局外的话一进 404 整个导航就消失了，只能手改地址栏才能出来。
+      // Vue Router 会优先匹配静态路径（/org/branch 等），不会被这条兜底规则抢走。
+      {
+        path: ':pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/error/404.vue'),
+        hidden: true
       }
     ]
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    component: () => import('@/views/error/404.vue'),
-    hidden: true
   }
 ]
 

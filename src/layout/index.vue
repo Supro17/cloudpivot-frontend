@@ -42,7 +42,9 @@
     <aside class="sidemenu" v-if="sides.length">
       <div class="sidemenu__title">{{ currentTopTitle }}</div>
       <el-menu class="sidemenu__menu" :default-active="activeSide" :ellipsis="false" @select="onSelectSide">
-        <MenuItem v-for="s in sides" :key="s.path" :item="s" base-path="" />
+        <!-- ★ base-path 必须传当前一级菜单路径：子项 path 是相对路径（'user'），
+             传空串会拼不出 /system/user，点击后跳到 /user 直接 404 -->
+        <MenuItem v-for="s in sides" :key="s.path" :item="s" :base-path="activeTop" />
       </el-menu>
     </aside>
 
@@ -69,7 +71,7 @@ import settings from '@/settings'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import { useWebsocketStore } from '@/store/modules/websocket'
-import { visibleChildren } from '@/utils/menu'
+import { visibleChildren, resolvePath, isHttp } from '@/utils/menu'
 import MenuItem from './components/MenuItem.vue'
 
 const route = useRoute()
@@ -111,10 +113,25 @@ function iconOf(m) {
 
 // 点一级菜单：若其下有页面则跳第一个，否则跳该模块路径
 function onSelectTop(index) {
+  // 一级本身就是外链（少见，如把 swagger 提到顶层）
+  if (isHttp(index)) {
+    window.open(index, '_blank')
+    return
+  }
+
   const target = menus.value.find((m) => m.path === index)
   const kids = target ? visibleChildren(target) : []
+
   if (kids.length) {
-    router.push(kids[0].path)
+    // ★ 子项的 path 是【相对路径】（如 'user'、'branch'），必须拼上父路径
+    //   变成 /system/user、/org/branch —— 直接 router.push('user') 会以当前路径
+    //   为基准解析，从 /index 变成 /user → 404
+    const full = resolvePath(index, kids[0].path)
+    if (isHttp(full)) {
+      window.open(full, '_blank')
+    } else {
+      router.push(full)
+    }
   } else if (index !== '/index') {
     router.push(index)
   }
