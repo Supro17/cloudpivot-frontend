@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { statistics } from '@/api/attendance'
 import { listDepart } from '@/api/org'
 import { clampPercent } from '@/utils/date'

@@ -8,7 +8,13 @@ import request from '@/utils/request'
  *  - /system/user/getInfo → cp-system
  */
 
-// 登录。验证码在网关配置里已关闭（security.captcha.enabled=false），无需传 code
+// 获取验证码（网关 /code）
+// 返回 { code: 是否开启验证码, uuid: 校验用标识, img: base64 图片 }
+export function getCodeImg() {
+  return request({ url: '/code', method: 'get' })
+}
+
+// 登录。带上验证码（网关 ValidateCodeFilter 会校验 code + uuid）
 export function login(data) {
   return request({
     url: '/auth/login',
