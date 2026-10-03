@@ -27,12 +27,15 @@
         <el-table-column prop="actualDays" label="实际出勤" width="110" align="center" />
         <el-table-column label="出勤率" min-width="240">
           <template #default="{ row }">
-            <el-progress
-              :percentage="Number(row.attendanceRate)"
-              :stroke-width="8"
-              text-inside
-              :color="rateColor(row.attendanceRate)"
-            />
+            <div class="rate">
+              <el-progress
+                :percentage="clampPercent(row.attendanceRate)"
+                :stroke-width="10"
+                :show-text="false"
+                :color="rateColor(row.attendanceRate)"
+              />
+              <span class="rate__text">{{ row.attendanceRate }}%</span>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -44,6 +47,7 @@
 import { onMounted, ref } from 'vue'
 import { statistics } from '@/api/attendance'
 import { listDepart } from '@/api/org'
+import { clampPercent } from '@/utils/date'
 import PageHeader from '@/components/PageHeader.vue'
 
 const loading = ref(false)
@@ -86,9 +90,32 @@ function reset() {
   getList()
 }
 
+// 出勤率文字放在进度条外面（text-inside 时小百分比会被压在色条里看不清）
 onMounted(async () => {
   const res = await listDepart({ pageNum: 1, pageSize: 500 })
   departOptions.value = res.rows || []
-  getList()
-})
-</script>
+    getList()
+  })
+  </script>
+
+<style scoped>
+/* 出勤率：进度条 + 右侧文字。不用 text-inside —— 百分比小时文字会被压在色条里显示不全 */
+.rate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rate :deep(.el-progress) {
+  flex: 1;
+  min-width: 120px;
+}
+
+.rate__text {
+  width: 64px;
+  text-align: right;
+  color: var(--cp-text-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+</style>

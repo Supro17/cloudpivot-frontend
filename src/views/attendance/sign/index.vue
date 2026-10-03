@@ -12,13 +12,13 @@
           <div class="clock__row">
             <span class="clock__label">签到时间</span>
             <span class="clock__val" :class="{ done: info.signInTime }">
-              {{ info.signInTime || '未签到' }}
+              {{ formatDateTimeCN(info.signInTime) }}
             </span>
           </div>
           <div class="clock__row">
             <span class="clock__label">签退时间</span>
             <span class="clock__val" :class="{ done: info.signOutTime }">
-              {{ info.signOutTime || '未签退' }}
+              {{ formatDateTimeCN(info.signOutTime) }}
             </span>
           </div>
         </div>
@@ -61,7 +61,15 @@
         <el-table-column prop="actualDays" label="实际出勤" width="110" align="center" />
         <el-table-column label="出勤率" min-width="220">
           <template #default="{ row }">
-            <el-progress :percentage="Number(row.attendanceRate)" :stroke-width="8" text-inside />
+            <div class="rate">
+              <el-progress
+                :percentage="clampPercent(row.attendanceRate)"
+                :stroke-width="10"
+                :show-text="false"
+                :color="rateColor(row.attendanceRate)"
+              />
+              <span class="rate__text">{{ row.attendanceRate }}%</span>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -73,6 +81,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { today, signIn, signOut, statistics } from '@/api/attendance'
+import { formatDateTimeCN, clampPercent } from '@/utils/date'
 import PageHeader from '@/components/PageHeader.vue'
 
 const info = reactive({ signInTime: null, signOutTime: null, canSignIn: false, canSignOut: false })
@@ -112,6 +121,14 @@ async function loadStat() {
     endDate: `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`
   })
   statRows.value = res.data || []
+}
+
+// 出勤率配色：≥90% 绿 / ≥60% 橙 / 其余红（与考勤统计页保持一致）
+function rateColor(rate) {
+  const v = Number(rate)
+  if (v >= 90) return '#67c23a'
+  if (v >= 60) return '#e6a23c'
+  return '#f56c6c'
 }
 
 onMounted(() => {
@@ -187,5 +204,26 @@ onUnmounted(() => timer && clearInterval(timer))
   margin-top: 20px;
   font-size: 12px;
   color: var(--cp-text-3);
+}
+
+/* 出勤率：进度条 + 右侧文字。
+   不用 text-inside —— 百分比小时文字会被压在色条里显示不全（实测 50% 就看不清楚） */
+.rate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rate :deep(.el-progress) {
+  flex: 1;
+  min-width: 120px;
+}
+
+.rate__text {
+  width: 64px;
+  text-align: right;
+  color: var(--cp-text-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 </style>
