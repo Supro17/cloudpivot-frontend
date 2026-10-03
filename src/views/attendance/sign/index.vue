@@ -52,11 +52,12 @@
     </div>
 
     <div class="cp-card">
-      <h2 class="cp-card__title">本月概况</h2>
-      <p class="cp-card__desc">来自考勤统计接口，含工作日与实际出勤</p>
+      <h2 class="cp-card__title">本月概况（本人）</h2>
+      <p class="cp-card__desc">
+        只统计你自己 · 其他人的考勤请到「考勤统计」查看
+      </p>
       <el-table class="cp-table" :data="statRows">
-        <el-table-column prop="userName" label="账号" width="140" />
-        <el-table-column prop="deptName" label="部门" width="180" />
+        <el-table-column prop="deptName" label="部门" width="220" />
         <el-table-column prop="workDays" label="工作日" width="100" align="center" />
         <el-table-column prop="actualDays" label="实际出勤" width="110" align="center" />
         <el-table-column label="出勤率" min-width="220">
@@ -82,7 +83,10 @@ import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { today, signIn, signOut, statistics } from '@/api/attendance'
 import { formatDateTimeCN, clampPercent } from '@/utils/date'
+import { useUserStore } from '@/store/modules/user'
 import PageHeader from '@/components/PageHeader.vue'
+
+const userStore = useUserStore()
 
 const info = reactive({ signInTime: null, signOutTime: null, canSignIn: false, canSignOut: false })
 const statRows = ref([])
@@ -118,15 +122,45 @@ async function doSign(type) {
   }
 }
 
+// 工作日天数（非周六周日）：与后端 AttStatisticsServiceImpl.countWorkDays 口径一致（口径 A）
+function countWorkDays(begin, end) {
+  let n = 0
+  for (const d = new Date(begin); d <= end; d.setDate(d.getDate() + 1)) {
+    const w = d.getDay()
+    if (w !== 0 && w !== 6) n++
+  }
+  return n
+}
+
 async function loadStat() {
   const f = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const now = new Date()
+  const begin = new Date(now.getFullYear(), now.getMonth(), 1)
   // ★ 统计区间截止到今天：未到月底按当天算，而不是按整月（否则出勤率会被"未来未到的日子"拉低）
   const res = await statistics({
-    beginDate: f(new Date(now.getFullYear(), now.getMonth(), 1)),
+    beginDate: f(begin),
     endDate: f(now)
   })
-  statRows.value = res.data || []
+  const all = res.data || []
+  // ★「我的考勤」只展示本人：统计接口返回的是「当前数据权限可见范围内所有人」
+  //   （admin/人事/考勤管理员能看到多行，普通员工只有自己一行）。
+  //   这里统一按登录名筛出自己那一条；其他人的明细到「考勤统计」页看。
+  const mine = all.find((r) => r.userName === userStore.name)
+  if (mine) {
+    statRows.value = [mine]
+    return
+  }
+  // 本月还没有任何打卡记录时，后端不会返回本行（SQL 按 att_sign 分组），
+  // 这里补一条「本人 0 出勤」的记录，避免页面空着让人误以为坏了。
+  statRows.value = [
+    {
+      userName: userStore.name,
+      deptName: userStore.orgText || '',
+      workDays: countWorkDays(begin, now),
+      actualDays: 0,
+      attendanceRate: 0
+    }
+  ]
 }
 
 // 出勤率配色：≥90% 绿 / ≥60% 橙 / 其余红（与考勤统计页保持一致）
