@@ -101,9 +101,12 @@
 
     <!-- 上传文件 -->
     <el-dialog v-model="uploadVisible" title="上传文件" width="480px">
-      <el-upload drag :auto-upload="false" :limit="1" :on-change="onFileChange">
+      <el-upload ref="uploadRef" drag :auto-upload="false" :limit="1" :on-change="onFileChange">
         <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
         <div class="el-upload__text">拖拽文件到此处，或 <em>点击选择</em></div>
+        <template #tip>
+          <div class="el-upload__tip">单个文件不超过 {{ MAX_FILE_MB }}MB</div>
+        </template>
       </el-upload>
       <el-form label-width="80px" class="up">
         <el-form-item label="文件类型" required>
@@ -157,6 +160,14 @@ const renameName = ref('')
 const renameRow = ref({})
 
 const query = reactive({ pageNum: 1, pageSize: 10 })
+
+// 上传上限，必须与后端 Nacos application-dev.yml 的
+// spring.servlet.multipart.max-file-size 保持一致，否则会出现
+// 「前端放行、后端 413」或反过来「前端拦了、其实后端允许」的错位。
+const MAX_FILE_MB = 50
+const MAX_FILE_SIZE = MAX_FILE_MB * 1024 * 1024
+
+const uploadRef = ref(null)
 
 // 文件类型字典 —— 对应后端 cp_document.doc_file_type 表（type_id / type_name）
 // 后端暂未提供查询该字典的接口，故在此固化；字典若有变动需同步此处。
@@ -247,10 +258,33 @@ async function submitFolder() {
   }
 }
 
+/**
+ * 大小校验：超限时给明确提示并返回 false。
+ * 放在选文件阶段而不是提交阶段 —— 否则用户选完、点上传，等请求打到后端
+ * 才被拒（原来会看到 Spring 的英文原文 “Maximum upload size exceeded”）。
+ */
+function checkSize(file) {
+  if (!file) return true
+  if (file.size > MAX_FILE_SIZE) {
+    const actual = (file.size / 1024 / 1024).toFixed(1)
+    ElMessage.warning(`「${file.name}」${actual}MB，超过单个文件 ${MAX_FILE_MB}MB 的上限，请压缩后重试`)
+    return false
+  }
+  return true
+}
+
 function onFileChange(file) {
-  pickedFile.value = file.raw
+  const raw = file.raw
+  if (!checkSize(raw)) {
+    // 清掉 el-upload 内部已选中的文件，否则列表里还挂着它、看起来像选成功了
+    pickedFile.value = null
+    fileType.value = null
+    uploadRef.value?.clearFiles()
+    return
+  }
+  pickedFile.value = raw
   // 按扩展名自动推断类型
-  fileType.value = guessType(file.name || file.raw?.name || '')
+  fileType.value = guessType(file.name || raw?.name || '')
 }
 
 async function submitUpload() {
@@ -262,6 +296,8 @@ async function submitUpload() {
     ElMessage.warning('请选择文件类型')
     return
   }
+  // 双保险：pickedFile 也可能从别处被改
+  if (!checkSize(pickedFile.value)) return
   saving.value = true
   try {
     const fd = new FormData()
