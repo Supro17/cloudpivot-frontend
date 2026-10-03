@@ -2,8 +2,14 @@
   <div>
     <PageHeader title="文档库" subtitle="目录树 + 文件列表，文件实际存放在 MinIO，库里只存对象名">
       <template #actions>
-        <el-button class="cp-btn" :icon="FolderAdd" @click="openFolder">新建文件夹</el-button>
-        <el-button class="cp-btn" type="primary" :icon="Upload" @click="uploadVisible = true">上传文件</el-button>
+        <el-button v-hasPermi="['document:add']" class="cp-btn" :icon="FolderAdd" @click="openFolder">新建文件夹</el-button>
+        <el-button
+          v-hasPermi="['document:add']"
+          class="cp-btn"
+          type="primary"
+          :icon="Upload"
+          @click="uploadVisible = true"
+        >上传文件</el-button>
       </template>
     </PageHeader>
 
@@ -57,8 +63,8 @@
           <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
               <el-button v-if="row.fileType !== 1" link class="cp-link" @click="download(row)">下载</el-button>
-              <el-button link class="cp-link" @click="rename(row)">重命名</el-button>
-              <el-button link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
+              <el-button v-hasPermi="['document:edit']" link class="cp-link" @click="rename(row)">重命名</el-button>
+              <el-button v-hasPermi="['document:remove']" link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>

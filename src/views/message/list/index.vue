@@ -5,7 +5,9 @@
         <h2 class="cp-page-title">消息管理</h2>
         <p class="cp-page-desc">新建、编辑、发布站内消息；发布后可实时推送给在线用户</p>
       </div>
-      <el-button type="primary" :icon="Plus" @click="openForm(null)">新建消息</el-button>
+      <el-button v-hasPermi="['message:add']" type="primary" :icon="Plus" @click="openForm(null)">
+        新建消息
+      </el-button>
     </div>
 
     <!-- 筛选 -->
@@ -58,16 +60,25 @@
             <el-button link type="primary" @click="openDetail(row.messageId)">详情</el-button>
             <el-button
               v-if="row.ifPublish === 0"
+              v-hasPermi="['message:edit']"
               link
               type="primary"
               @click="openForm(row)"
             >
               编辑
             </el-button>
-            <el-button v-if="row.ifPublish === 0" link type="success" @click="handlePublish(row)">
+            <el-button
+              v-if="row.ifPublish === 0"
+              v-hasPermi="['message:publish']"
+              link
+              type="success"
+              @click="handlePublish(row)"
+            >
               发布
             </el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-hasPermi="['message:remove']" link type="danger" @click="handleDelete(row)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>

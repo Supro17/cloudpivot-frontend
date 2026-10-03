@@ -2,7 +2,7 @@
   <div>
     <PageHeader title="我的日程" subtitle="月历视图查看与新增个人日程，支持例会、评审、培训等类型">
       <template #actions>
-        <el-button class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增日程</el-button>
+        <el-button v-hasPermi="['schedule:add']" class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增日程</el-button>
       </template>
     </PageHeader>
 
@@ -82,7 +82,7 @@
           <el-descriptions-item label="备注">{{ current.schContent || '-' }}</el-descriptions-item>
         </el-descriptions>
         <div class="drawer-actions">
-          <el-button class="cp-btn" type="primary" @click="editFromDetail">编辑</el-button>
+          <el-button v-hasPermi="['schedule:edit']" class="cp-btn" type="primary" @click="editFromDetail">编辑</el-button>
           <el-button class="cp-btn" @click="backToList">返回日历</el-button>
         </div>
       </template>

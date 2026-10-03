@@ -2,7 +2,7 @@
   <div>
     <PageHeader title="个人便签" subtitle="轻量记录个人待办与提醒">
       <template #actions>
-        <el-button class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增便签</el-button>
+        <el-button v-hasPermi="['schedule:note:add']" class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增便签</el-button>
       </template>
     </PageHeader>
 

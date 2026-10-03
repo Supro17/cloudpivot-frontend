@@ -2,7 +2,7 @@
   <div>
     <PageHeader title="员工管理" subtitle="员工档案来自系统用户，这里维护其扩展信息（性别、签名、头像）">
       <template #actions>
-        <el-button class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增员工</el-button>
+        <el-button v-hasPermi="['org:user:add']" class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增员工</el-button>
       </template>
     </PageHeader>
 
@@ -35,8 +35,8 @@
         <el-table-column prop="signDesc" label="个性签名" min-width="200" show-overflow-tooltip />
         <el-table-column label="操作" width="140" fixed="right">
           <template #default="{ row }">
-            <el-button link class="cp-link" @click="openForm(row)">编辑</el-button>
-            <el-button link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
+            <el-button v-hasPermi="['org:user:edit']" link class="cp-link" @click="openForm(row)">编辑</el-button>
+            <el-button v-hasPermi="['org:user:remove']" link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

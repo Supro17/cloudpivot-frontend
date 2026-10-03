@@ -4,7 +4,13 @@
 
     <div class="cp-card">
       <div class="cp-toolbar">
-        <el-button class="cp-btn" type="primary" :disabled="!rows.length" @click="handleRestoreAll">
+        <el-button
+          v-hasPermi="['document:recycle:restore']"
+          class="cp-btn"
+          type="primary"
+          :disabled="!rows.length"
+          @click="handleRestoreAll"
+        >
           全部还原
         </el-button>
         <span class="hint">共 {{ total }} 条待处理</span>
@@ -23,8 +29,8 @@
         <el-table-column prop="updateTime" label="删除时间" width="200" :formatter="fmt" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button link class="cp-link" @click="handleRestore(row)">还原</el-button>
-            <el-button link class="cp-link cp-link--danger" @click="handlePurge(row)">永久删除</el-button>
+            <el-button v-hasPermi="['document:recycle:restore']" link class="cp-link" @click="handleRestore(row)">还原</el-button>
+            <el-button v-hasPermi="['document:recycle:remove']" link class="cp-link cp-link--danger" @click="handlePurge(row)">永久删除</el-button>
           </template>
         </el-table-column>
       </el-table>

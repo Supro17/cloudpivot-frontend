@@ -2,7 +2,7 @@
   <div>
     <PageHeader title="部门管理" subtitle="维护部门扩展信息：负责人、联系方式与所属机构">
       <template #actions>
-        <el-button class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增部门</el-button>
+        <el-button v-hasPermi="['org:depart:add']" class="cp-btn" type="primary" :icon="Plus" @click="openForm()">新增部门</el-button>
       </template>
     </PageHeader>
 
@@ -26,8 +26,8 @@
         <el-table-column prop="branchId" label="所属机构" width="100" />
         <el-table-column label="操作" width="140" fixed="right">
           <template #default="{ row }">
-            <el-button link class="cp-link" @click="openForm(row)">编辑</el-button>
-            <el-button link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
+            <el-button v-hasPermi="['org:depart:edit']" link class="cp-link" @click="openForm(row)">编辑</el-button>
+            <el-button v-hasPermi="['org:depart:remove']" link class="cp-link cp-link--danger" @click="handleRemove(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

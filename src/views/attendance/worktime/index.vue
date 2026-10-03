@@ -7,7 +7,7 @@
         <el-select v-model="branchId" placeholder="全部机构" clearable style="width: 220px" @change="load">
           <el-option v-for="b in branchOptions" :key="b.branchId" :label="b.branchName" :value="b.branchId" />
         </el-select>
-        <el-button class="cp-btn" type="primary" :loading="saving" @click="submit">保存</el-button>
+        <el-button v-hasPermi="['attendance:worktime:edit']" class="cp-btn" type="primary" :loading="saving" @click="submit">保存</el-button>
       </div>
 
       <el-form :model="form" label-width="120px" class="wt">

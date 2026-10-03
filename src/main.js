@@ -8,6 +8,8 @@ import './assets/styles/index.css'
 import App from './App.vue'
 import store from './store'
 import router from './router'
+import hasPermi from './directive/hasPermi'
+import hasRole from './directive/hasRole'
 import './permission'
 
 const app = createApp(App)
@@ -16,6 +18,10 @@ const app = createApp(App)
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+// 按钮级权限指令：无权限时元素直接不渲染，避免"点了才 403"
+app.directive('hasPermi', hasPermi)
+app.directive('hasRole', hasRole)
 
 app.use(store)
 app.use(router)
