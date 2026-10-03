@@ -52,6 +52,13 @@ service.interceptors.response.use(
     return body
   },
   (error) => {
+    // 网关 AuthFilter 直接返回 HTTP 401（如被单点登录踢下线、令牌过期），
+    // 走不到上面的业务码分支，这里单独兜住，否则只弹提示、不跳登录页
+    const status = error.response && error.response.status
+    if (status === 401) {
+      handleRelogin()
+      return Promise.reject(error)
+    }
     let message = error.message
     if (message === 'Network Error') {
       message = '网络异常，请检查后端服务与网关是否启动'
