@@ -56,3 +56,13 @@ export function markRead(id) {
 export function getUnreadCount() {
   return request({ url: '/message/unread/count', method: 'get' })
 }
+
+/**
+ * ⑪ 发送消息（新建并立即发布，一步到位不落草稿）
+ * 供「我的信箱」的发消息入口使用 —— 普通员工/部门负责人没有消息管理页，
+ * 不该先存草稿再跑去列表发布。
+ * 发送范围由服务端校验：超出可选范围会返回明确的 500 + 提示语
+ */
+export function sendMsg(data) {
+  return request({ url: '/message/send', method: 'post', data: data })
+}

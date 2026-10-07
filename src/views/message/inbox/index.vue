@@ -10,7 +10,17 @@
           </el-badge>
         </p>
       </div>
-      <el-button :icon="Refresh" @click="refresh">刷新</el-button>
+      <div class="head-actions">
+        <el-button
+          v-hasPermi="['message:add']"
+          type="primary"
+          :icon="EditPen"
+          @click="sendVisible = true"
+        >
+          发消息
+        </el-button>
+        <el-button :icon="Refresh" @click="refresh">刷新</el-button>
+      </div>
     </div>
 
     <div class="cp-card">
@@ -47,15 +57,19 @@
     </div>
 
     <MsgDetailDrawer v-model="detailVisible" :message-id="detailId" />
+
+    <!-- 发消息：复用消息表单（mode=send 走「新建并立即发布」，不落草稿） -->
+    <MsgFormDialog v-model="sendVisible" mode="send" @saved="onSent" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { Bell, Refresh } from '@element-plus/icons-vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { Bell, EditPen, Refresh } from '@element-plus/icons-vue'
 import { listInbox, markRead } from '@/api/message'
 import { useWebsocketStore } from '@/store/modules/websocket'
 import MsgDetailDrawer from '../components/MsgDetailDrawer.vue'
+import MsgFormDialog from '../components/MsgFormDialog.vue'
 import { formatDateTimeCN } from '@/utils/date'
 
 const wsStore = useWebsocketStore()
@@ -66,21 +80,24 @@ const fmt = (row, column, cellValue) => formatDateTimeCN(cellValue)
 const loading = ref(false)
 const rows = ref([])
 const total = ref(0)
-const unread = ref(0)
+
+// 未读数以 wsStore 为唯一数据源：顶部红点与页面 badge 共用同一个值，
+// 避免 WebSocket 推送只更新一端、导致同一页面出现两个不同的数字
+const unread = computed(() => wsStore.unread)
 
 const query = reactive({ pageNum: 1, pageSize: 10 })
 const detailVisible = ref(false)
 const detailId = ref(null)
+const sendVisible = ref(false)
 
 async function getList() {
   loading.value = true
   try {
-    // ⑦ 信箱的返回体是 AjaxResult：data 里是 { total, unread, rows }
+    // ⑦ 信箱的返回体是 AjaxResult：data 里是 { total, rows }
     const res = await listInbox(query)
     const data = res.data || {}
     rows.value = data.rows || []
     total.value = data.total || 0
-    unread.value = data.unread || 0
   } finally {
     loading.value = false
   }
@@ -91,20 +108,29 @@ function refresh() {
   wsStore.refreshUnread()
 }
 
-// 查看详情 + 未读则标记已读（⑨ 幂等，重复点击也不会重复减计数）
+// 发送成功：刷新列表与未读数（自己可能也在接收范围内）
+function onSent() {
+  getList()
+  wsStore.refreshUnread()
+}
+
+// 查看详情 + 未读则标记已读（⑨ 幂等，重复点击也不会重复计数）
 function handleView(row) {
   detailId.value = row.messageId
   detailVisible.value = true
   if (row.ifRead !== 1) {
     markRead(row.messageId).then(() => {
       row.ifRead = 1
-      unread.value = Math.max(0, unread.value - 1)
+      // 不做本地自减，直接以服务端重算的值为准
       wsStore.refreshUnread()
     })
   }
 }
 
-onMounted(getList)
+onMounted(() => {
+  getList()
+  wsStore.refreshUnread()
+})
 </script>
 
 <style scoped>
@@ -117,6 +143,12 @@ onMounted(getList)
 
 .badge {
   vertical-align: middle;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .pager {

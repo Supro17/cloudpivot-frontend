@@ -75,3 +75,25 @@ export function updateUser(data) {
 export function removeUser(userName) {
   return request({ url: `/org/user/remove/${userName}`, method: 'delete' })
 }
+
+// ============================ 我的可选范围（选人用） ============================
+
+/**
+ * GET /org/scope/my —— 我的可选范围
+ * 返回 { deptId, deptName, leader, level: 'NONE'|'DEPT'|'BRANCH', depts[], desc }
+ *   level 决定能选到哪一层：DEPT=仅本部门 / BRANCH=本机构 / NONE=无范围
+ *   desc 由服务端拼好，前端直接展示，避免前端重复实现判定逻辑
+ */
+export function myScope(config = {}) {
+  return request({ url: '/org/scope/my', method: 'get', ...config })
+}
+
+/**
+ * GET /org/scope/users?deptIds=1,2 —— 指定部门下的人员
+ * 后端会与「我的可见部门」求交集，传范围外的 deptId 拿不到任何数据
+ * （deptIds 用逗号拼接，Spring 端直接映射到 List<Long>）
+ */
+export function myScopeUsers(deptIds, config = {}) {
+  const ids = Array.isArray(deptIds) ? deptIds.join(',') : deptIds
+  return request({ url: '/org/scope/users', method: 'get', params: { deptIds: ids }, ...config })
+}

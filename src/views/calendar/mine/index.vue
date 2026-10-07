@@ -56,7 +56,9 @@
           <el-input v-model="form.address" placeholder="如：3楼会议室" />
         </el-form-item>
         <el-form-item label="参与人" prop="preContracts">
-          <el-select v-model="form.preContracts" multiple filterable placeholder="可留空" style="width: 100%" />
+          <!-- 机构 → 部门 → 人员 三级选择；可选范围由服务端按角色限制
+               （普通员工=本部门，负责人=本机构），前端只负责渲染 -->
+          <OrgUserPicker v-model="form.preContracts" placeholder="按机构 / 部门 / 人员逐级选择" />
         </el-form-item>
         <el-form-item label="备注" prop="schContent">
           <el-input v-model="form.schContent" type="textarea" :rows="3" />
@@ -102,6 +104,7 @@ import {
   getSchedule
 } from '@/api/schedule'
 import PageHeader from '@/components/PageHeader.vue'
+import OrgUserPicker from '@/components/OrgUserPicker.vue'
 import { formatDateTimeCN } from '@/utils/date'
 
 const todayMonth = new Date().toISOString().slice(0, 7)
